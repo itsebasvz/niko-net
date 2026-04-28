@@ -1,6 +1,14 @@
 # niko-net
 
-Red social estilo Twitter construida de forma modular, escalable y sencilla para propósitos escolares.
+**niko-net** es una plataforma de interacción social basada en microblogging, diseñada específicamente para la comunicación técnica y asíncrona. 
+
+Inspirada en redes como X, Threads y Bluesky, la aplicación busca resolver la dispersión de información técnica creando un ecosistema donde la brevedad obliga a la claridad. Es el espacio ideal para exponer ideas, compartir soluciones y resolver dudas de programación.
+
+### ¿Para quién es?
+Está orientada a toda la comunidad tecnológica:
+- **Perfil Primario:** Estudiantes de ingeniería, desarrolladores autodidactas y profesionales junior.
+- **Perfil Secundario:** Reclutadores técnicos, profesionales senior (mentoring) y entusiastas del software libre.
+- **Acceso Abierto:** ¡Cualquier persona apasionada por el desarrollo de software es bienvenida!
 
 ## Tecnologías
 - **Frontend**: HTML5, CSS3, JavaScript Vanilla
