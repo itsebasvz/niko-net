@@ -7,6 +7,24 @@ Red social estilo Twitter construida de forma modular, escalable y sencilla para
 - **Backend**: Node.js, Express, JWT
 - **Base de Datos**: PostgreSQL (ejecutada mediante Docker)
 
+## Base de Datos
+
+El modelo de datos relacional almacena la información central de los usuarios, sus publicaciones, interacciones y sesiones activas.
+
+| Tabla | Se relaciona con | Tipo | Descripción |
+|---|---|---|---|
+| USERS | POSTS | 1 a muchos | Un usuario puede escribir muchas publicaciones |
+| USERS | COMMENTS | 1 a muchos | Un usuario puede escribir muchos comentarios |
+| USERS | FOLLOWS | 1 a muchos | Un usuario puede seguir a muchos otros |
+| USERS | LIKES | 1 a muchos | Un usuario puede dar like a muchos posts |
+| USERS | REFRESH_TOKENS | 1 a muchos | Un usuario puede tener varios tokens de sesión |
+| POSTS | COMMENTS | 1 a muchos | Un post puede recibir muchos comentarios |
+| POSTS | LIKES | 1 a muchos | Un post puede recibir muchos likes |
+
+*Nota: Se implementa **soft delete** (borrado lógico a través de un flag `is_deleted`) en publicaciones y comentarios para preservar el historial sin perder referencias en la base de datos.*
+
+→ [Documentación técnica completa](docs/database.md)
+
 ## Requisitos Previos
 - [Node.js](https://nodejs.org/) (v18+)
 - [Docker](https://www.docker.com/) y Docker Compose

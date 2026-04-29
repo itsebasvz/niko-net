@@ -1,37 +1,101 @@
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    bio TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+-- Eliminar tablas si existen en orden inverso a sus dependencias
+-- Utilizamos CASCADE para asegurar que las dependencias asociadas se eliminen sin errores
+DROP TABLE IF EXISTS refresh_tokens CASCADE;
+DROP TABLE IF EXISTS likes CASCADE;
+DROP TABLE IF EXISTS follows CASCADE;
+DROP TABLE IF EXISTS comments CASCADE;
+DROP TABLE IF EXISTS posts CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
+-- USERS: Cuentas de usuario
+CREATE TABLE users (
+    -- SERIAL genera un entero autoincremental, equivalente a AUTO_INCREMENT en MySQL
+    id SERIAL PRIMARY KEY,
+    -- UNIQUE asegura que no haya dos usuarios con el mismo nombre
+    username VARCHAR(50) NOT NULL UNIQUE,
+    -- UNIQUE asegura que el correo electrónico no esté duplicado
+    email VARCHAR(255) NOT NULL UNIQUE,
+    -- Almacena el hash bcrypt de la contraseña, nunca el texto plano por seguridad
+    password_hash VARCHAR(255) NOT NULL,
+    display_name VARCHAR(100),
+    bio TEXT,
+    avatar_url VARCHAR(500),
+    -- TIMESTAMP WITH TIME ZONE guarda la fecha/hora y respeta la zona horaria
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+COMMENT ON TABLE users IS 'Cuentas de usuario';
+
+-- POSTS: Publicaciones de texto (máx. 280 caracteres)
 CREATE TABLE posts (
     id SERIAL PRIMARY KEY,
-    author_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    -- ON DELETE CASCADE: si se elimina el usuario, sus posts se eliminan automáticamente de la base de datos
+    author_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content VARCHAR(280) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    -- Soft delete: marcamos el registro como eliminado en lugar de borrarlo físicamente.
+    -- Esto evita que likes y comentarios queden huérfanos en la base de datos.
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+COMMENT ON TABLE posts IS 'Publicaciones de texto (máx. 280 caracteres)';
 
+-- COMMENTS: Comentarios en posts
+CREATE TABLE comments (
+    id SERIAL PRIMARY KEY,
+    -- ON DELETE CASCADE: si se elimina el post original, todos sus comentarios desaparecen
+    post_id INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    -- ON DELETE CASCADE: si se elimina el autor, sus comentarios también se eliminan
+    author_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content VARCHAR(500) NOT NULL,
+    -- Soft delete para ocultar el comentario sin eliminar el registro físico
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+COMMENT ON TABLE comments IS 'Comentarios en posts';
+
+-- FOLLOWS: Relación seguidor/seguido
 CREATE TABLE follows (
-    follower_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    following_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (follower_id, following_id)
+    -- ON DELETE CASCADE: si un usuario es borrado, se borran sus "follows" y "followers"
+    follower_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    following_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    -- Clave primaria compuesta: evita que un usuario siga al mismo usuario dos veces
+    PRIMARY KEY (follower_id, following_id),
+    -- Restricción para evitar que un usuario se siga a sí mismo
+    CONSTRAINT no_auto_follow CHECK (follower_id <> following_id)
 );
+COMMENT ON TABLE follows IS 'Relación seguidor/seguido';
 
+-- LIKES: Likes a posts (un like por usuario por post)
 CREATE TABLE likes (
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    -- ON DELETE CASCADE: si se elimina el usuario o el post, el like se elimina automáticamente
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    post_id INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    -- Clave primaria compuesta: asegura que un usuario solo pueda dar un like a cada post
     PRIMARY KEY (user_id, post_id)
 );
+COMMENT ON TABLE likes IS 'Likes a posts (un like por usuario por post)';
 
+-- REFRESH_TOKENS: Tokens JWT de refresco
 CREATE TABLE refresh_tokens (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    token_hash VARCHAR(255) NOT NULL,
+    -- ON DELETE CASCADE: los tokens se invalidan y eliminan si el usuario es borrado
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    -- El token_hash debe ser único para evitar colisiones
+    token_hash VARCHAR(255) NOT NULL UNIQUE,
+    -- Flag para invalidar manualmente un token si hay un problema de seguridad sin borrar el registro
+    is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    -- Fecha de expiración obligatoria para control de vigencia del JWT
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+COMMENT ON TABLE refresh_tokens IS 'Tokens JWT de refresco';
+
+-- Índices requeridos
+-- Optimizan la velocidad de las consultas frecuentes por claves foráneas
+CREATE INDEX idx_posts_author_id ON posts(author_id);
+CREATE INDEX idx_comments_post_id ON comments(post_id);
+CREATE INDEX idx_follows_follower ON follows(follower_id);
+CREATE INDEX idx_tokens_user_id ON refresh_tokens(user_id);
