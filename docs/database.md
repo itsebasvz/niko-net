@@ -96,6 +96,21 @@ docker compose up -d
 docker exec -it nikonet_db psql -U postgres -d nikonet -c "\dt"
 ```
 
+## Pruebas de validación
+
+Para asegurar que la base de datos se ha creado correctamente y contiene los datos de prueba (seed), puedes ejecutar los siguientes comandos en tu terminal:
+
+```bash
+# Validar la cantidad de usuarios (debería retornar 3)
+docker exec -it nikonet_db psql -U postgres -d nikonet -c "SELECT count(*) FROM users;"
+
+# Validar la cantidad de posts (debería retornar 5)
+docker exec -it nikonet_db psql -U postgres -d nikonet -c "SELECT count(*) FROM posts;"
+
+# Ver los posts más recientes y sus autores
+docker exec -it nikonet_db psql -U postgres -d nikonet -c "SELECT u.username, p.content FROM posts p JOIN users u ON p.user_id = u.user_id ORDER BY p.created_at DESC LIMIT 3;"
+```
+
 ## Cómo resetear la base de datos
 
 ```bash
