@@ -9,7 +9,7 @@ document.getElementById('registroForm').addEventListener('submit', async (e) => 
     const bio = document.getElementById('bio').value;
 
     try {
-        const response = await fetch('http://127.0.0.1:4000/registro', {
+        const response = await fetch('http://localhost:3000/registro', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             // Enviamos todos los campos al backend
