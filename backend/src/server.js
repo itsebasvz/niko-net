@@ -1,12 +1,12 @@
-require('dotenv').config(); // Carga las variables de entorno
+require('dotenv').config(); 
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 
-const app = express(); // Aquí declaramos 'app' una sola vez
-app.use(cors()); // Permite que el HTML le hable a este servidor
-app.use(express.json()); // Permite leer datos en formato JSON
+const app = express(); 
+app.use(cors()); 
+app.use(express.json()); 
 
 // 1. Conexión a la Base de Datos
 const pool = new Pool({
@@ -17,7 +17,9 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
+// ==========================================
 // 2. LA RUTA DE REGISTRO
+// ==========================================
 app.post('/registro', async (req, res) => {
   const { username, email, password, display_name, bio } = req.body; 
 
@@ -46,8 +48,47 @@ app.post('/registro', async (req, res) => {
   }
 });
 
-// 3. Enciende el servidor
-const PORT = process.env.PORT || 3000;
+
+// ==========================================
+// 3. LA RUTA DE LOGIN
+// ==========================================
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body; 
+
+  try {
+    const resultado = await pool.query(
+      'SELECT * FROM users WHERE email = $1', 
+      [email]
+    );
+    
+    if (resultado.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Usuario o contraseña incorrectos' });
+    }
+
+    const usuario = resultado.rows[0];
+
+    const contraseñaValida = await bcrypt.compare(password, usuario.password_hash);
+
+    if (!contraseñaValida) {
+      return res.status(400).json({ success: false, message: 'Usuario o contraseña incorrectos' });
+    }
+
+    res.status(200).json({ 
+        success: true, 
+        message: 'Inicio de sesión exitoso' 
+    });
+
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+
+// ==========================================
+// 4. ENCIENDE EL SERVIDOR
+// ==========================================
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
     console.log(`[SERVER] Niko-net Backend corriendo en http://localhost:${PORT}`);
-}); 
+});
