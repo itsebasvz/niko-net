@@ -27,6 +27,7 @@ document.getElementById('registroForm').addEventListener('submit', async (e) => 
         if (response.ok) {
             alert(data.message); 
             document.getElementById('registroForm').reset();
+            window.location.href = 'index.html';// Redirigir a prueba.html si es correcto
         } else {
             // Si hay un error (como que el usuario ya existe), se muestra
             alert('Atención: ' + data.message); 
