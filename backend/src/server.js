@@ -75,7 +75,8 @@ app.post('/login', async (req, res) => {
 
     res.status(200).json({ 
         success: true, 
-        message: 'Inicio de sesión exitoso' 
+        message: 'Inicio de sesión exitoso',
+        user_id: usuario.id
     });
 
   } catch (error) {

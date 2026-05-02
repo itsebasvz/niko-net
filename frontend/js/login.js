@@ -20,7 +20,7 @@ loginForm.addEventListener('submit', async (e) => {
         if (response.ok) {
             // Guardamos la bandera en la memoria antes de cambiar de página
             localStorage.setItem("nikonet_session", "activa");
-            
+            localStorage.setItem("nikonet_userId", data.user_id); // Nueva memoria para las publicaciones
             window.location.href = 'inicio.html';// Redirigir a prueba.html si es correcto
         } else {
             messageDiv.textContent = data.message; // Mostrar error (ej: "Usuario no encontrado")
