@@ -113,6 +113,39 @@ app.post('/crear-post', async (req, res) => {
   }
 });
 
+// ==========================================
+// RUTA PARA OBTENER TODAS LAS PUBLICACIONES
+// ==========================================
+app.get('/posts', async (req, res) => {
+    try {
+        // Y los ordenamos para que los más nuevos salgan hasta arriba
+        /*Se realiza un join en la tabla de post de la BD para vincular (o unir) 
+        los post realizados con el autor que le corresponde. Lo anterior se filtra con el is_deleted = FALSE */
+        const query = `
+            SELECT 
+                p.id, 
+                p.content, 
+                p.created_at, 
+                u.display_name, 
+                u.username 
+            FROM posts p
+            JOIN users u ON p.author_id = u.id
+            WHERE p.is_deleted = FALSE
+            ORDER BY p.created_at DESC;
+        `;
+        
+        /*Se ordenan de forma que el más reciente sea el primero*/
+        const resultado = await pool.query(query);
+        
+        res.status(200).json({ 
+            success: true, 
+            posts: resultado.rows 
+        });
+    } catch (error) {
+        console.error('Error al obtener posts:', error);
+        res.status(500).json({ success: false, message: 'Error al cargar el muro' });
+    }
+});
 
 // ==========================================
 // 4. ENCIENDE EL SERVIDOR
