@@ -118,7 +118,6 @@ app.post('/crear-post', async (req, res) => {
 // ==========================================
 app.get('/posts', async (req, res) => {
     try {
-        // Y los ordenamos para que los más nuevos salgan hasta arriba
         /*Se realiza un join en la tabla de post de la BD para vincular (o unir) 
         los post realizados con el autor que le corresponde. Lo anterior se filtra con el is_deleted = FALSE */
         const query = `
