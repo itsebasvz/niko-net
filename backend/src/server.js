@@ -85,6 +85,34 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// ==========================================
+// RUTA PARA CREAR UN POST (SOLO TEXTO)
+// ==========================================
+app.post('/crear-post', async (req, res) => {
+  const { author_id, content } = req.body;
+
+  // Pequeña validación de seguridad en el backend
+  if (!content || content.trim() === '') {
+      return res.status(400).json({ success: false, message: 'El contenido no puede estar vacío' });
+  }
+
+  try {
+    const nuevoPost = await pool.query(
+      'INSERT INTO posts (author_id, content) VALUES ($1, $2) RETURNING *',
+      [author_id, content]
+    );
+
+    res.status(201).json({ 
+      success: true, 
+      message: '¡Publicación compartida en Niko-net!',
+      post: nuevoPost.rows[0]
+    });
+  } catch (error) {
+    console.error('Error al crear post:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
 
 // ==========================================
 // 4. ENCIENDE EL SERVIDOR
