@@ -2,40 +2,137 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Niko-net - Inicio</title>
-    
-    <!-- El cadenero de seguridad -->
-    <script src="js/auth-check.js"></script> 
-    
-    <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/app.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio — Niko-net</title>
+    <link rel="stylesheet" href="css/base.css">
+    <script src="js/auth-check.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Mi Perfil Niko-net</h1>
-        <button onclick="cerrarSesion()">Cerrar Sesión</button>
-    </header>
 
-    <main>
-        <h2>¡Bienvenido a Niko-net!</h2>
+<div class="app-shell">
+    <!-- ========== NAV RAIL (izquierda) ========== -->
+    <aside class="nav-rail">
+        <div class="nav-logo">
+            <img src="assets/niko-logo.png" alt="Niko">
+            <span>niko<i>-</i>net</span>
+        </div>
+        <nav class="nav-list">
+            <button class="nav-item active" data-route="feed">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>
+                <span>Inicio</span>
+            </button>
+            <button class="nav-item" data-route="explore">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <span>Explorar</span>
+            </button>
+            <button class="nav-item" data-route="profile">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a7 7 0 0 1 13 0"/></svg>
+                <span>Perfil</span>
+            </button>
+        </nav>
+        <button class="nav-compose" id="btnCompose">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
+            <span>Postear idea</span>
+        </button>
+        <div class="nav-user">
+            <div class="nav-avatar" id="navAvatar">?</div>
+            <div class="nav-user-info">
+                <div class="nav-user-name" id="navUserName">Usuario</div>
+                <div class="nav-user-handle" id="navUserHandle">@usuario</div>
+            </div>
+            <button class="nav-logout" onclick="cerrarSesion()" title="Cerrar sesión">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
+        </div>
+    </aside>
 
-        <section id="seccion-crear-post" style="max-width: 500px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9;">
-            <h3 style="margin-top: 0;">¿Qué hay de nuevo?</h3>
-            <form id="formCrearPost">
-                <textarea id="contenidoPost" maxlength="280" placeholder="Escribe tu publicación (máx. 280 caracteres)..." 
-                        style="width: 100%; height: 80px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; resize: none; font-family: inherit;" required></textarea>
-                
-                <button type="submit" style="width: 100%; padding: 10px; margin-top: 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                    Publicar
-                </button>
-            </form>
-        </section>
+    <!-- ========== MAIN FEED (centro) ========== -->
+    <main class="app-main">
+        <header class="feed-header">
+            <h2>Inicio</h2>
+            <div class="feed-tabs">
+                <button class="tab active">Para ti</button>
+                <button class="tab">Siguiendo</button>
+            </div>
+        </header>
 
-        <!-- Inyección dinámica de  posts-->
-        <div id="muro-posts" style="max-width: 500px; margin: 0 auto;"></div>
+        <!-- Composer -->
+        <div class="composer">
+            <div class="composer-avatar" id="composerAvatar">?</div>
+            <div class="composer-body">
+                <form id="formCrearPost">
+                    <textarea id="contenidoPost" maxlength="280" rows="3" placeholder="¿Qué idea se te prendió?"></textarea>
+                    <div class="composer-bar">
+                        <div></div>
+                        <div class="composer-actions">
+                            <span class="count" id="charCount">280</span>
+                            <button type="button" class="btn-preview" id="btnPreview" disabled title="Previsualizar post">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                            <button type="submit" class="btn-primary btn-pill" id="btnPostear" disabled>Postear</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="feed-divider"><span>Posts recientes</span></div>
+
+        <!-- Posts se inyectan aquí -->
+        <div class="post-list" id="muro-posts"></div>
     </main>
-    
-    <!-- El archivo con la lógica de tu página de inicio -->
-    <script src="js/inicio.js"></script>
+
+    <!-- ========== RIGHT RAIL (derecha) ========== -->
+    <aside class="right-rail">
+        <div class="rr-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input placeholder="Buscar en niko-net" disabled>
+        </div>
+        <section class="rr-card">
+            <h3>Tendencias para ti</h3>
+            <ul class="trend-list">
+                <li><a class="trend-tag">#JavaScript</a><span class="trend-meta">Tendencia en tecnología</span></li>
+                <li><a class="trend-tag">#CleanCode</a><span class="trend-meta">Buenas prácticas</span></li>
+                <li><a class="trend-tag">#OpenSource</a><span class="trend-meta">Comunidad</span></li>
+                <li><a class="trend-tag">#PostgreSQL</a><span class="trend-meta">Bases de datos</span></li>
+                <li><a class="trend-tag">#NikoNet</a><span class="trend-meta">La plataforma</span></li>
+            </ul>
+        </section>
+        <footer class="rr-footer">
+            <a>Acerca</a> · <a>Privacidad</a> · <a>Términos</a>
+            <div>© 2026 niko-net</div>
+        </footer>
+    </aside>
+</div>
+
+<!-- Modal overlay para ver post publicado -->
+<div class="modal-overlay" id="postModal" style="display:none;">
+    <div class="modal-card" id="modalCard">
+        <header class="modal-head">
+            <button class="modal-close" id="modalClose">×</button>
+            <span class="modal-title">Post</span>
+        </header>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<!-- RQF10: Modal de previsualización ANTES de publicar -->
+<div class="modal-overlay" id="previewModal" style="display:none;">
+    <div class="modal-card" id="previewCard">
+        <header class="modal-head">
+            <button class="modal-close" id="previewClose">×</button>
+            <span class="modal-title">Previsualización</span>
+        </header>
+        <div class="modal-body" id="previewBody">
+            <!-- Se renderiza dinámicamente como tarjeta de post -->
+        </div>
+        <footer class="modal-footer" id="previewFooter">
+            <button class="btn-secondary btn-pill" id="previewEdit">Seguir editando</button>
+            <button class="btn-primary btn-pill" id="previewPublish">Publicar</button>
+        </footer>
+    </div>
+</div>
+
+<script src="js/inicio.js"></script>
 </body>
 </html>

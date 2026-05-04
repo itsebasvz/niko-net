@@ -74,7 +74,7 @@ app.post('/login', async (req, res) => {
     );
 
 
-    res.status(200).json({ success: true, message: 'Inicio de sesión exitoso', token, user_id: user.id });
+    res.status(200).json({ success: true, message: 'Inicio de sesión exitoso', token, user_id: user.id, username: user.username, display_name: user.display_name });
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
