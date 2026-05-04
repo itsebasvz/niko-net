@@ -18,10 +18,11 @@ loginForm.addEventListener('submit', async (e) => {
         const data = await response.json();
 
         if (response.ok) {
-            // Guardamos la bandera en la memoria antes de cambiar de página
+            // Guardamos el token JWT y la sesión activa en el localStorage
+            localStorage.setItem("nikonet_token", data.token);
             localStorage.setItem("nikonet_session", "activa");
             
-            window.location.href = 'inicio.html';// Redirigir a prueba.html si es correcto
+            window.location.href = 'inicio.html';
         } else {
             messageDiv.textContent = data.message; // Mostrar error (ej: "Usuario no encontrado")
         }
