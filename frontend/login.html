@@ -1,24 +1,52 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
-    <title>Login - Niko-Net</title>
-    <!-- Si usas CSS personalizado o un framework como Materialize, conéctalo aquí -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión — Niko-net</title>
     <link rel="stylesheet" href="css/base.css">
 </head>
-
 <body>
-    <div class="login-container">
-        <form id="loginForm">
-            <h2>Iniciar Sesión</h2>
-            <input type="email" id="email" placeholder="Correo electrónico" required>
-            <input type="password" id="password" placeholder="Contraseña" required>
-            <button type="submit">Entrar</button>
+    <div class="auth-page">
+        <div class="auth-bg">
+            <span class="px" style="left:15%;top:20%;background:#ffd95a;width:6px;height:6px;animation-delay:0s"></span>
+            <span class="px" style="left:80%;top:15%;background:#f1a3b8;width:4px;height:4px;animation-delay:0.3s"></span>
+            <span class="px" style="left:65%;top:70%;background:#ffd95a;width:8px;height:8px;animation-delay:0.6s"></span>
+            <span class="px" style="left:30%;top:85%;background:#f1a3b8;width:5px;height:5px;animation-delay:0.9s"></span>
+            <span class="px" style="left:45%;top:8%;background:#ffd95a;width:4px;height:4px;animation-delay:1.2s"></span>
+            <span class="px" style="left:88%;top:50%;background:#f1a3b8;width:6px;height:6px;animation-delay:1.5s"></span>
+            <span class="px" style="left:5%;top:55%;background:#ffd95a;width:5px;height:5px;animation-delay:1.8s"></span>
+            <span class="px" style="left:55%;top:40%;background:#f1a3b8;width:4px;height:4px;animation-delay:2.1s"></span>
+            <img class="auth-niko" src="assets/niko-character.png" alt="">
+        </div>
+
+        <form class="auth-card" id="loginForm">
+            <div class="auth-logo">
+                <img src="assets/niko-logo.png" alt="Niko">
+            </div>
+            <h1 class="auth-title">Bienvenide a niko-net</h1>
+            <p class="auth-sub">Inicia sesión para conjurar tu próxima idea.</p>
+
+            <label class="field">
+                <span>Correo electrónico</span>
+                <input type="email" id="email" placeholder="tú@ejemplo.com" required>
+            </label>
+            <label class="field">
+                <span>Contraseña</span>
+                <input type="password" id="password" placeholder="Tu contraseña" required>
+            </label>
+
+            <button type="submit" class="btn-primary auth-submit">Iniciar sesión</button>
+
+            <div id="message" class="auth-msg" style="display:none;"></div>
+
+            <div class="auth-switch">
+                ¿Aún no tienes cuenta?
+                <a href="registro.html">Regístrate</a>
+            </div>
         </form>
-        <div id="message"></div> <!-- Para mostrar errores de login -->
     </div>
+
     <script src="js/login.js"></script>
 </body>
-
 </html>
