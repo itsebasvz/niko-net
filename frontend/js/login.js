@@ -21,7 +21,7 @@ loginForm.addEventListener('submit', async (e) => {
             // Guardamos el token JWT y la sesión activa en el localStorage
             localStorage.setItem("nikonet_token", data.token);
             localStorage.setItem("nikonet_session", "activa");
-            
+            localStorage.setItem("nikonet_userId", data.user_id);
             window.location.href = 'inicio.html';
         } else {
             messageDiv.textContent = data.message; // Mostrar error (ej: "Usuario no encontrado")

@@ -73,13 +73,74 @@ app.post('/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.status(200).json({ success: true, message: 'Inicio de sesión exitoso', token });
+
+    res.status(200).json({ success: true, message: 'Inicio de sesión exitoso', token, user_id: user.id });
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
 
+// ==========================================
+// RUTA PARA CREAR UN POST (SOLO TEXTO)
+// ==========================================
+app.post('/crear-post', async (req, res) => {
+  const { author_id, content } = req.body;
+
+  // Pequeña validación de seguridad en el backend
+  if (!content || content.trim() === '') {
+      return res.status(400).json({ success: false, message: 'El contenido no puede estar vacío' });
+  }
+
+  try {
+    const nuevoPost = await pool.query(
+      'INSERT INTO posts (author_id, content) VALUES ($1, $2) RETURNING *',
+      [author_id, content]
+    );
+
+    res.status(201).json({ 
+      success: true, 
+      message: '¡Publicación compartida en Niko-net!',
+      post: nuevoPost.rows[0]
+    });
+  } catch (error) {
+    console.error('Error al crear post:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// ==========================================
+// RUTA PARA OBTENER TODAS LAS PUBLICACIONES
+// ==========================================
+app.get('/posts', async (req, res) => {
+    try {
+        /*Se realiza un join en la tabla de post de la BD para vincular (o unir) 
+        los post realizados con el autor que le corresponde. Lo anterior se filtra con el is_deleted = FALSE */
+        const query = `
+            SELECT 
+                p.id, 
+                p.content, 
+                p.created_at, 
+                u.display_name, 
+                u.username 
+            FROM posts p
+            JOIN users u ON p.author_id = u.id
+            WHERE p.is_deleted = FALSE
+            ORDER BY p.created_at DESC;
+        `;
+        
+        /*Se ordenan de forma que el más reciente sea el primero*/
+        const resultado = await pool.query(query);
+        
+        res.status(200).json({ 
+            success: true, 
+            posts: resultado.rows 
+        });
+    } catch (error) {
+        console.error('Error al obtener posts:', error);
+        res.status(500).json({ success: false, message: 'Error al cargar el muro' });
+    }
+});
 // ==========================================
 // 4. ENCIENDE EL SERVIDOR
 // ==========================================

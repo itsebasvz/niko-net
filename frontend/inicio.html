@@ -18,8 +18,23 @@
 
     <main>
         <h2>¡Bienvenido a Niko-net!</h2>
-    </main>
 
+        <section id="seccion-crear-post" style="max-width: 500px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9;">
+            <h3 style="margin-top: 0;">¿Qué hay de nuevo?</h3>
+            <form id="formCrearPost">
+                <textarea id="contenidoPost" maxlength="280" placeholder="Escribe tu publicación (máx. 280 caracteres)..." 
+                        style="width: 100%; height: 80px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; resize: none; font-family: inherit;" required></textarea>
+                
+                <button type="submit" style="width: 100%; padding: 10px; margin-top: 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    Publicar
+                </button>
+            </form>
+        </section>
+
+        <!-- Inyección dinámica de  posts-->
+        <div id="muro-posts" style="max-width: 500px; margin: 0 auto;"></div>
+    </main>
+    
     <!-- El archivo con la lógica de tu página de inicio -->
     <script src="js/inicio.js"></script>
 </body>
