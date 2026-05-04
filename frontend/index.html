@@ -3,30 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Niko-net | Inicio</title>
+    <title>Niko-net — Cada post, una chispa</title>
+    <meta name="description" content="Microblogging técnico en español. 280 caracteres, cada post es una idea que brilla.">
     <link rel="stylesheet" href="css/base.css">
 </head>
 <body>
-    <header>
-        <h1>Niko-net</h1>
-        <nav>
-            <a href="index.html">Feed</a>
-            <a href="login.html">Iniciar Sesión</a>
-            <a href="registro.html">¿Aún no tienes cuenta? Presiona aqui</a>
-        </nav>
-    </header>
-    
-    <main>
-        <section id="feed">
-            <h2>Últimos Posts</h2>
-            <div id="posts-container">
-                <!-- Los posts se cargarán aquí por JS -->
-                <p>Cargando posts...</p>
-            </div>
-        </section>
-    </main>
+    <div class="hero-page">
+        <div class="auth-bg">
+            <span class="px" style="left:12%;top:18%;background:#ffd95a;width:6px;height:6px;animation-delay:0s"></span>
+            <span class="px" style="left:85%;top:12%;background:#f1a3b8;width:4px;height:4px;animation-delay:0.4s"></span>
+            <span class="px" style="left:70%;top:75%;background:#ffd95a;width:8px;height:8px;animation-delay:0.8s"></span>
+            <span class="px" style="left:25%;top:80%;background:#f1a3b8;width:5px;height:5px;animation-delay:1.2s"></span>
+            <span class="px" style="left:50%;top:10%;background:#ffd95a;width:4px;height:4px;animation-delay:1.6s"></span>
+            <span class="px" style="left:90%;top:55%;background:#f1a3b8;width:6px;height:6px;animation-delay:2s"></span>
+            <span class="px" style="left:8%;top:60%;background:#ffd95a;width:5px;height:5px;animation-delay:2.4s"></span>
+            <img class="auth-niko" src="assets/niko-character.png" alt="Niko, la gata bruja">
+        </div>
 
-    <script src="js/api.js"></script>
-    <script src="js/feed.js"></script>
+        <div class="hero-content">
+            <img class="hero-logo" src="assets/niko-logo.png" alt="Niko-net logo">
+            <h1>niko<i>-</i>net</h1>
+            <p>Microblogging técnico en español. 280 caracteres — cada post es una chispa, cada idea cuenta.</p>
+            <div class="hero-actions">
+                <a href="registro.html" class="btn-primary btn-pill" style="padding:14px 32px;font-size:15px;">Crear cuenta</a>
+                <a href="login.html" class="btn-secondary btn-pill" style="padding:14px 32px;font-size:15px;">Iniciar sesión</a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
