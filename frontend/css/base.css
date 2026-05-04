@@ -94,6 +94,9 @@ img { max-width: 100%; }
 .composer-actions { display: flex; align-items: center; gap: 12px; }
 .count { font-family: var(--font-mono); font-size: 12px; color: var(--fg-3); }
 .count.danger { color: var(--niko-rose-400); font-weight: 700; }
+.btn-preview { background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--fg-2); width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; transition: all var(--dur-2) var(--ease-out); cursor: pointer; }
+.btn-preview:hover:not(:disabled) { color: var(--niko-purple-300); background: var(--bg-surface-3); box-shadow: var(--glow-purple); border-color: var(--niko-purple-400); }
+.btn-preview:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* Feed divider */
 .feed-divider { padding: 12px 20px; font-family: var(--font-display); font-size: 11px; text-transform: uppercase; letter-spacing: var(--ls-allcaps); color: var(--fg-3); border-bottom: 1px solid var(--border-subtle); }
@@ -146,6 +149,13 @@ img { max-width: 100%; }
 .modal-post-author .modal-handle { font-family: var(--font-mono); font-size: 13px; color: var(--fg-3); }
 .modal-post-content { font-size: 18px; line-height: 1.6; color: var(--fg-1); margin-bottom: 16px; word-wrap: break-word; }
 .modal-post-meta { font-family: var(--font-mono); font-size: 13px; color: var(--fg-3); padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+.modal-footer { display: flex; justify-content: flex-end; gap: 12px; padding: 16px 20px; border-top: 1px solid var(--border-subtle); }
+
+/* Preview: tarjeta simulando cómo se verá el post en el feed */
+.preview-label { font-family: var(--font-display); font-size: 11px; text-transform: uppercase; letter-spacing: var(--ls-allcaps); color: var(--fg-3); margin-bottom: 12px; }
+.preview-card { background: var(--bg-app); border: 1px solid var(--border-default); border-radius: var(--r-lg); padding: 16px 20px; }
+.preview-card .post { border-bottom: none; padding: 0; cursor: default; }
+.preview-card .post:hover { background: transparent; }
 
 /* ============ TOAST ============ */
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: var(--r-pill); background: var(--bg-surface); border: 1px solid var(--border-default); font-size: var(--fs-sm); box-shadow: var(--shadow-3); animation: slideUp var(--dur-3) var(--ease-spring); z-index: 200; }

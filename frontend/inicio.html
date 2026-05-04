@@ -66,6 +66,9 @@
                         <div></div>
                         <div class="composer-actions">
                             <span class="count" id="charCount">280</span>
+                            <button type="button" class="btn-preview" id="btnPreview" disabled title="Previsualizar post">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
                             <button type="submit" class="btn-primary btn-pill" id="btnPostear" disabled>Postear</button>
                         </div>
                     </div>
@@ -102,16 +105,31 @@
     </aside>
 </div>
 
-<!-- Modal overlay para RQF10 (post completo) -->
+<!-- Modal overlay para ver post publicado -->
 <div class="modal-overlay" id="postModal" style="display:none;">
     <div class="modal-card" id="modalCard">
         <header class="modal-head">
             <button class="modal-close" id="modalClose">×</button>
             <span class="modal-title">Post</span>
         </header>
-        <div class="modal-body" id="modalBody">
-            <!-- Se rellena dinámicamente -->
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<!-- RQF10: Modal de previsualización ANTES de publicar -->
+<div class="modal-overlay" id="previewModal" style="display:none;">
+    <div class="modal-card" id="previewCard">
+        <header class="modal-head">
+            <button class="modal-close" id="previewClose">×</button>
+            <span class="modal-title">Previsualización</span>
+        </header>
+        <div class="modal-body" id="previewBody">
+            <!-- Se renderiza dinámicamente como tarjeta de post -->
         </div>
+        <footer class="modal-footer" id="previewFooter">
+            <button class="btn-secondary btn-pill" id="previewEdit">Seguir editando</button>
+            <button class="btn-primary btn-pill" id="previewPublish">Publicar</button>
+        </footer>
     </div>
 </div>
 

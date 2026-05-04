@@ -23,10 +23,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const contenidoPost = document.getElementById('contenidoPost');
     const charCount = document.getElementById('charCount');
     const btnPostear = document.getElementById('btnPostear');
+    const btnPreview = document.getElementById('btnPreview');
     const postModal = document.getElementById('postModal');
     const modalClose = document.getElementById('modalClose');
     const modalBody = document.getElementById('modalBody');
     const modalCard = document.getElementById('modalCard');
+
+    // RQF10: referencias del modal de previsualización
+    const previewModal = document.getElementById('previewModal');
+    const previewClose = document.getElementById('previewClose');
+    const previewBody = document.getElementById('previewBody');
+    const previewCard = document.getElementById('previewCard');
+    const previewEdit = document.getElementById('previewEdit');
+    const previewPublish = document.getElementById('previewPublish');
 
     // Cargar info del usuario en el nav rail
     const displayName = localStorage.getItem('nikonet_displayName') || 'Usuario';
@@ -43,7 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const remaining = 280 - contenidoPost.value.length;
         charCount.textContent = remaining;
         charCount.classList.toggle('danger', remaining < 20);
-        btnPostear.disabled = contenidoPost.value.trim().length === 0 || remaining < 0;
+        const hayContenido = contenidoPost.value.trim().length > 0 && remaining >= 0;
+        btnPostear.disabled = !hayContenido;
+        btnPreview.disabled = !hayContenido;
     });
 
     // ---- FUNCIÓN: Formatear timestamp relativo ----
@@ -142,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = 'hidden';
     }
 
-    // ---- FUNCIÓN: Cerrar modal ----
+    // ---- FUNCIÓN: Cerrar modal de post publicado ----
     function cerrarModal() {
         postModal.style.display = 'none';
         document.body.style.overflow = '';
@@ -152,11 +163,86 @@ document.addEventListener('DOMContentLoaded', () => {
     postModal.addEventListener('click', (e) => {
         if (e.target === postModal) cerrarModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && postModal.style.display === 'grid') cerrarModal();
-    });
-    // Evitar que click dentro del modal card lo cierre
     modalCard.addEventListener('click', (e) => e.stopPropagation());
+
+    // ===========================================================
+    // RQF10: PREVISUALIZACIÓN DE POST ANTES DE PUBLICAR
+    // El usuario puede ver cómo se verá su post en el feed
+    // antes de publicarlo, con opción de editar o publicar.
+    // ===========================================================
+
+    // Abrir modal de previsualización
+    btnPreview.addEventListener('click', () => {
+        const content = contenidoPost.value.trim();
+        if (!content) return;
+
+        // Renderizar la tarjeta de preview simulando cómo se verá en el feed
+        previewBody.innerHTML = `
+            <div class="preview-label">Así se verá tu post en el feed</div>
+            <div class="preview-card">
+                <article class="post">
+                    <div class="post-avatar" style="background:${getAvatarBg(0)}">
+                        ${avatar}
+                    </div>
+                    <div class="post-main">
+                        <header class="post-head">
+                            <span class="post-name">${displayName}</span>
+                            <span class="post-handle">@${username}</span>
+                            <span class="post-ts">· ahora</span>
+                        </header>
+                        <div class="post-body">${content}</div>
+                        <footer class="post-actions">
+                            <button class="act">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                <span>0</span>
+                            </button>
+                            <button class="act">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                                <span>0</span>
+                            </button>
+                            <button class="act">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                <span>0</span>
+                            </button>
+                        </footer>
+                    </div>
+                </article>
+            </div>
+        `;
+
+        previewModal.style.display = 'grid';
+        document.body.style.overflow = 'hidden';
+    });
+
+    // Cerrar modal de preview
+    function cerrarPreview() {
+        previewModal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    previewClose.addEventListener('click', cerrarPreview);
+    previewEdit.addEventListener('click', () => {
+        cerrarPreview();
+        contenidoPost.focus();
+    });
+    previewModal.addEventListener('click', (e) => {
+        if (e.target === previewModal) cerrarPreview();
+    });
+    previewCard.addEventListener('click', (e) => e.stopPropagation());
+
+    // Publicar directamente desde el modal de preview
+    previewPublish.addEventListener('click', () => {
+        cerrarPreview();
+        formCrearPost.requestSubmit();
+    });
+
+    // Escape cierra el modal que esté visible
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (previewModal.style.display === 'grid') cerrarPreview();
+            else if (postModal.style.display === 'grid') cerrarModal();
+        }
+    });
 
     // ---- FUNCIÓN: Cargar posts del servidor ----
     async function cargarPosts() {
