@@ -186,9 +186,12 @@ img { max-width: 100%; }
 }
 .flatpickr-months .flatpickr-month,
 .flatpickr-current-month .flatpickr-monthDropdown-months,
-.flatpickr-current-month input.cur-year,
-.flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+.flatpickr-current-month input.cur-year {
     background: transparent !important;
+    color: var(--fg-1) !important;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+    background: var(--bg-surface-2) !important;
     color: var(--fg-1) !important;
 }
 .flatpickr-day {
