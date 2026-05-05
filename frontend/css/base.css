@@ -221,3 +221,43 @@ span.flatpickr-weekday {
 #clearDateBtn:hover {
     color: var(--color-danger) !important;
 }
+
+/* ============ CUSTOM DROPDOWN (RQF09) ============ */
+.custom-dropdown {
+    position: relative;
+    display: inline-block;
+}
+.cd-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 6px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-3);
+    z-index: 100;
+    min-width: 180px;
+    overflow: hidden;
+    animation: fadeIn var(--dur-2) var(--ease-out);
+}
+.cd-menu.show {
+    display: block;
+}
+.cd-option {
+    padding: 10px 16px;
+    font-size: 0.85em;
+    color: var(--fg-1);
+    cursor: pointer;
+    font-family: var(--font-display);
+    transition: background var(--dur-2) var(--ease-out);
+}
+.cd-option:hover {
+    background: var(--bg-surface-2);
+}
+.cd-option.active {
+    background: rgba(243, 196, 59, 0.1);
+    color: var(--niko-yellow-500);
+    font-weight: 700;
+}

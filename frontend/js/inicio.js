@@ -36,9 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewCard = document.getElementById('previewCard');
     const previewEdit = document.getElementById('previewEdit');
     const previewPublish = document.getElementById('previewPublish');
-    const feedOrder = document.getElementById('feedOrder');
     const feedDate = document.getElementById('feedDate');
     const clearDateBtn = document.getElementById('clearDateBtn');
+
+    // Variables del Custom Dropdown
+    const cdToggleBtn = document.getElementById('cdToggleBtn');
+    const cdMenu = document.getElementById('cdMenu');
+    const cdSelectedText = document.getElementById('cdSelectedText');
+    const cdOptions = document.querySelectorAll('.cd-option');
+    let currentOrderValue = 'desc';
 
     // Cargar info del usuario en el nav rail
     const displayName = localStorage.getItem('nikonet_displayName') || 'Usuario';
@@ -279,11 +285,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Cargar posts iniciales con el orden seleccionado
-    cargarPosts(feedOrder ? feedOrder.value : 'desc', feedDate ? feedDate.value : '');
+    cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
 
-    if (feedOrder) {
-        feedOrder.addEventListener('change', () => {
-            cargarPosts(feedOrder.value, feedDate ? feedDate.value : '');
+    // ---- LÓGICA DEL CUSTOM DROPDOWN ----
+    if (cdToggleBtn) {
+        // Abrir/cerrar menú
+        cdToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            cdMenu.classList.toggle('show');
+        });
+
+        // Cerrar menú al hacer clic afuera
+        document.addEventListener('click', () => {
+            if (cdMenu.classList.contains('show')) {
+                cdMenu.classList.remove('show');
+            }
+        });
+
+        // Seleccionar una opción
+        cdOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                cdOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                cdSelectedText.textContent = option.textContent;
+                
+                currentOrderValue = option.getAttribute('data-value');
+                cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
+            });
         });
     }
 
@@ -300,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     if (clearDateBtn) clearDateBtn.style.display = 'none';
                 }
-                cargarPosts(feedOrder ? feedOrder.value : 'desc', dateStr);
+                cargarPosts(currentOrderValue, dateStr);
             }
         });
     }
@@ -337,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formCrearPost.reset();
                 charCount.textContent = '280';
                 charCount.classList.remove('danger');
-                cargarPosts(feedOrder ? feedOrder.value : 'desc', feedDate ? feedDate.value : '');
+                cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
                 mostrarToast('¡Post conjurado con éxito!');
             } else {
                 mostrarToast(data.message || 'Error al publicar', true);
