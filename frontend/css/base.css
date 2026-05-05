@@ -182,10 +182,11 @@ img { max-width: 100%; }
     /* Fuerza al navegador a usar el calendario en modo oscuro (si lo soporta) */
     color-scheme: dark;
     position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
 }
 
 #feedDate::-webkit-calendar-picker-indicator {
-    /* Convierte el icono de calendario negro por defecto a blanco */
-    filter: invert(1);
     cursor: pointer;
 }
