@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewCard = document.getElementById('previewCard');
     const previewEdit = document.getElementById('previewEdit');
     const previewPublish = document.getElementById('previewPublish');
+    const feedOrder = document.getElementById('feedOrder');
 
     // Cargar info del usuario en el nav rail
     const displayName = localStorage.getItem('nikonet_displayName') || 'Usuario';
@@ -245,9 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---- FUNCIÓN: Cargar posts del servidor ----
-    async function cargarPosts() {
+    async function cargarPosts(order = 'desc') {
         try {
-            const response = await fetch('http://localhost:4000/posts');
+            const response = await fetch(`http://localhost:4000/posts?order=${order}`);
             const data = await response.json();
 
             if (data.success) {
@@ -268,7 +269,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    cargarPosts();
+    // Cargar posts iniciales con el orden seleccionado
+    cargarPosts(feedOrder ? feedOrder.value : 'desc');
+
+    if (feedOrder) {
+        feedOrder.addEventListener('change', (e) => {
+            cargarPosts(e.target.value);
+        });
+    }
 
     // ---- CREAR POST ----
     formCrearPost.addEventListener('submit', async (e) => {
@@ -295,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formCrearPost.reset();
                 charCount.textContent = '280';
                 charCount.classList.remove('danger');
-                cargarPosts();
+                cargarPosts(feedOrder ? feedOrder.value : 'desc');
                 mostrarToast('¡Post conjurado con éxito!');
             } else {
                 mostrarToast(data.message || 'Error al publicar', true);
