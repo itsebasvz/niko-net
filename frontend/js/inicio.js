@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewPublish = document.getElementById('previewPublish');
     const feedOrder = document.getElementById('feedOrder');
     const feedDate = document.getElementById('feedDate');
+    const clearDateBtn = document.getElementById('clearDateBtn');
 
     // Cargar info del usuario en el nav rail
     const displayName = localStorage.getItem('nikonet_displayName') || 'Usuario';
@@ -286,10 +287,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Instancia de Flatpickr para el calendario
+    let fpInstance = null;
     if (feedDate) {
-        // Al seleccionar o borrar la fecha, recargamos el feed
-        feedDate.addEventListener('change', () => {
-            cargarPosts(feedOrder ? feedOrder.value : 'desc', feedDate.value);
+        fpInstance = flatpickr(feedDate, {
+            locale: "es",
+            dateFormat: "Y-m-d",
+            disableMobile: "true",
+            onChange: function(selectedDates, dateStr, instance) {
+                if (dateStr) {
+                    if (clearDateBtn) clearDateBtn.style.display = 'block';
+                } else {
+                    if (clearDateBtn) clearDateBtn.style.display = 'none';
+                }
+                cargarPosts(feedOrder ? feedOrder.value : 'desc', dateStr);
+            }
+        });
+    }
+
+    // Botón para limpiar la fecha "X"
+    if (clearDateBtn) {
+        clearDateBtn.addEventListener('click', () => {
+            if (fpInstance) fpInstance.clear();
         });
     }
 
