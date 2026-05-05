@@ -113,6 +113,11 @@ app.post('/crear-post', async (req, res) => {
 // RUTA PARA OBTENER TODAS LAS PUBLICACIONES
 // ==========================================
 app.get('/posts', async (req, res) => {
+    // Validar el parámetro 'order' para evitar inyecciones SQL
+    // Si no viene, por defecto será descendente (más recientes primero)
+    const orderParam = (req.query.order || '').toLowerCase();
+    const order = orderParam === 'asc' ? 'ASC' : 'DESC';
+
     try {
         /*Se realiza un join en la tabla de post de la BD para vincular (o unir) 
         los post realizados con el autor que le corresponde. Lo anterior se filtra con el is_deleted = FALSE */
@@ -126,10 +131,10 @@ app.get('/posts', async (req, res) => {
             FROM posts p
             JOIN users u ON p.author_id = u.id
             WHERE p.is_deleted = FALSE
-            ORDER BY p.created_at DESC;
+            ORDER BY p.created_at ${order};
         `;
         
-        /*Se ordenan de forma que el más reciente sea el primero*/
+        /*Se ordenan dinámicamente usando el valor validado*/
         const resultado = await pool.query(query);
         
         res.status(200).json({ 
