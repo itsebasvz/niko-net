@@ -78,9 +78,10 @@
 
         <div class="feed-divider"><span>Posts recientes</span></div>
 
-        <!-- Filtro de ordenamiento (RQF09) -->
-        <div class="feed-filter" style="display: flex; justify-content: flex-end; padding: 0 16px 16px 16px;">
-            <select id="feedOrder" class="btn-secondary btn-pill" style="padding: 6px 12px; font-size: 0.85em; cursor: pointer; outline: none;">
+        <!-- Filtro de ordenamiento y fecha (RQF09) -->
+        <div class="feed-filter" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 0 16px 16px 16px;">
+            <input type="date" id="feedDate" class="btn-secondary btn-pill" title="Elegir una fecha específica" style="padding: 5px 12px; font-size: 0.85em; cursor: pointer; outline: none; background: var(--bg-surface-2); color: var(--fg-1); height: 32px; border: 1px solid var(--border-strong);">
+            <select id="feedOrder" class="btn-secondary btn-pill" style="padding: 5px 12px; font-size: 0.85em; cursor: pointer; outline: none; height: 32px;">
                 <option value="desc" style="background: var(--bg-surface-2); color: var(--fg-1);">Más recientes primero</option>
                 <option value="asc" style="background: var(--bg-surface-2); color: var(--fg-1);">Más antiguos primero</option>
             </select>
