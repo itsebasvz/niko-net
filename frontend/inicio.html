@@ -78,6 +78,14 @@
 
         <div class="feed-divider"><span>Posts recientes</span></div>
 
+        <!-- Filtro de ordenamiento (RQF09) -->
+        <div class="feed-filter" style="display: flex; justify-content: flex-end; padding: 0 16px 16px 16px;">
+            <select id="feedOrder" class="btn-secondary btn-pill" style="padding: 6px 12px; font-size: 0.85em; cursor: pointer; outline: none; border-color: var(--border-color); background: var(--bg-card); color: var(--text-main);">
+                <option value="desc">Más recientes primero</option>
+                <option value="asc">Más antiguos primero</option>
+            </select>
+        </div>
+
         <!-- Posts se inyectan aquí -->
         <div class="post-list" id="muro-posts"></div>
     </main>
