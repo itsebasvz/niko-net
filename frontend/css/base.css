@@ -190,9 +190,24 @@ img { max-width: 100%; }
     background: transparent !important;
     color: var(--fg-1) !important;
 }
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    border-radius: var(--r-sm) !important;
+    padding: 2px !important;
+    outline: none !important;
+}
 .flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
     background: var(--bg-surface-2) !important;
     color: var(--fg-1) !important;
+}
+/* Flechas de cambio de año */
+.flatpickr-current-month .numInputWrapper span.arrowUp:after {
+    border-bottom-color: var(--fg-1) !important;
+}
+.flatpickr-current-month .numInputWrapper span.arrowDown:after {
+    border-top-color: var(--fg-1) !important;
+}
+.flatpickr-current-month .numInputWrapper span:hover {
+    background: var(--bg-surface-3) !important;
 }
 .flatpickr-day {
     color: var(--fg-2) !important;
