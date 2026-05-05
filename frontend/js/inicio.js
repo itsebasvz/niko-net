@@ -322,6 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             locale: "es",
             dateFormat: "Y-m-d",
             disableMobile: "true",
+            monthSelectorType: "static", // Usa texto simple en lugar de un <select> para los meses
             onChange: function(selectedDates, dateStr, instance) {
                 if (dateStr) {
                     if (clearDateBtn) clearDateBtn.style.display = 'block';

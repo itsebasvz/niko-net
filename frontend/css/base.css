@@ -183,6 +183,12 @@ img { max-width: 100%; }
     border: 1px solid var(--border-default) !important;
     box-shadow: var(--shadow-3) !important;
     border-radius: var(--r-md) !important;
+    font-family: var(--font-body) !important;
+}
+.flatpickr-current-month {
+    font-family: var(--font-display) !important;
+    font-size: 110% !important;
+    font-weight: 700 !important;
 }
 .flatpickr-months .flatpickr-month,
 .flatpickr-current-month .flatpickr-monthDropdown-months,
