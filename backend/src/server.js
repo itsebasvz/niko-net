@@ -119,9 +119,8 @@ app.get('/posts', async (req, res) => {
     const order = orderParam === 'asc' ? 'ASC' : 'DESC';
 
     try {
-        /*Se realiza un join en la tabla de post de la BD para vincular (o unir) 
-        los post realizados con el autor que le corresponde. Lo anterior se filtra con el is_deleted = FALSE */
-        const query = `
+        /* Consulta base: JOIN entre posts y users, ignorando eliminados */
+        let query = `
             SELECT 
                 p.id, 
                 p.content, 
@@ -131,11 +130,20 @@ app.get('/posts', async (req, res) => {
             FROM posts p
             JOIN users u ON p.author_id = u.id
             WHERE p.is_deleted = FALSE
-            ORDER BY p.created_at ${order};
         `;
+        const values = [];
+
+        // Si el usuario envía una fecha específica, agregamos el filtro
+        if (req.query.date) {
+            query += ` AND DATE(p.created_at) = $1`;
+            values.push(req.query.date);
+        }
+
+        // Finalmente concatenamos el ordenamiento dinámico
+        query += ` ORDER BY p.created_at ${order};`;
         
-        /*Se ordenan dinámicamente usando el valor validado*/
-        const resultado = await pool.query(query);
+        /* Ejecutar la consulta pasando los valores seguros */
+        const resultado = await pool.query(query, values);
         
         res.status(200).json({ 
             success: true, 
