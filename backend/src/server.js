@@ -134,8 +134,9 @@ app.get('/posts', async (req, res) => {
         const values = [];
 
         // Si el usuario envía una fecha específica, agregamos el filtro
+        // Convertimos el timestamp a la zona horaria local (-06:00) para que las fechas coincidan correctamente
         if (req.query.date) {
-            query += ` AND DATE(p.created_at) = $1`;
+            query += ` AND DATE(p.created_at AT TIME ZONE 'America/Mexico_City') = $1`;
             values.push(req.query.date);
         }
 
