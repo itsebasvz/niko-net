@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewEdit = document.getElementById('previewEdit');
     const previewPublish = document.getElementById('previewPublish');
     const feedOrder = document.getElementById('feedOrder');
+    const feedDate = document.getElementById('feedDate');
 
     // Cargar info del usuario en el nav rail
     const displayName = localStorage.getItem('nikonet_displayName') || 'Usuario';
@@ -246,9 +247,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---- FUNCIÓN: Cargar posts del servidor ----
-    async function cargarPosts(order = 'desc') {
+    async function cargarPosts(order = 'desc', date = '') {
         try {
-            const response = await fetch(`http://localhost:4000/posts?order=${order}`);
+            // Construir URL dinámicamente con los parámetros
+            const url = new URL('http://localhost:4000/posts');
+            url.searchParams.append('order', order);
+            if (date) {
+                url.searchParams.append('date', date);
+            }
+
+            const response = await fetch(url);
             const data = await response.json();
 
             if (data.success) {
@@ -270,11 +278,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Cargar posts iniciales con el orden seleccionado
-    cargarPosts(feedOrder ? feedOrder.value : 'desc');
+    cargarPosts(feedOrder ? feedOrder.value : 'desc', feedDate ? feedDate.value : '');
 
     if (feedOrder) {
-        feedOrder.addEventListener('change', (e) => {
-            cargarPosts(e.target.value);
+        feedOrder.addEventListener('change', () => {
+            cargarPosts(feedOrder.value, feedDate ? feedDate.value : '');
+        });
+    }
+
+    if (feedDate) {
+        // Al seleccionar o borrar la fecha, recargamos el feed
+        feedDate.addEventListener('change', () => {
+            cargarPosts(feedOrder ? feedOrder.value : 'desc', feedDate.value);
         });
     }
 
@@ -303,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formCrearPost.reset();
                 charCount.textContent = '280';
                 charCount.classList.remove('danger');
-                cargarPosts(feedOrder ? feedOrder.value : 'desc');
+                cargarPosts(feedOrder ? feedOrder.value : 'desc', feedDate ? feedDate.value : '');
                 mostrarToast('¡Post conjurado con éxito!');
             } else {
                 mostrarToast(data.message || 'Error al publicar', true);
