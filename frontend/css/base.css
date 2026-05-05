@@ -177,16 +177,47 @@ img { max-width: 100%; }
 .hero-content p { font-size: var(--fs-lg); color: var(--fg-2); margin: 0 0 var(--space-7); line-height: var(--lh-relaxed); }
 .hero-actions { display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap; }
 
-/* ============ DATE PICKER CUSTOMIZATIONS (RQF09) ============ */
-#feedDate {
-    /* Fuerza al navegador a usar el calendario en modo oscuro (si lo soporta) */
-    color-scheme: dark;
-    position: relative;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
+/* ============ FLATPICKR CUSTOM THEME (RQF09) ============ */
+.flatpickr-calendar {
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-default) !important;
+    box-shadow: var(--shadow-3) !important;
+    border-radius: var(--r-md) !important;
 }
-
-#feedDate::-webkit-calendar-picker-indicator {
-    cursor: pointer;
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year,
+.flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+    background: transparent !important;
+    color: var(--fg-1) !important;
+}
+.flatpickr-day {
+    color: var(--fg-2) !important;
+    border-radius: var(--r-sm) !important;
+}
+.flatpickr-day:hover {
+    background: var(--bg-surface-2) !important;
+    border-color: transparent !important;
+    color: var(--fg-1) !important;
+}
+.flatpickr-day.selected {
+    background: var(--niko-yellow-500) !important;
+    color: var(--niko-purple-950) !important;
+    border-color: var(--niko-yellow-500) !important;
+    font-weight: 700 !important;
+}
+span.flatpickr-weekday {
+    color: var(--fg-3) !important;
+}
+.flatpickr-calendar.arrowTop:before, .flatpickr-calendar.arrowTop:after {
+    border-bottom-color: var(--bg-surface) !important;
+}
+.flatpickr-calendar.arrowBottom:before, .flatpickr-calendar.arrowBottom:after {
+    border-top-color: var(--bg-surface) !important;
+}
+.flatpickr-prev-month svg, .flatpickr-next-month svg {
+    fill: var(--fg-1) !important;
+}
+#clearDateBtn:hover {
+    color: var(--color-danger) !important;
 }
