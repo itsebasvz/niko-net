@@ -1,15 +1,12 @@
-require('dotenv').config(); 
-const express = require('express');
-const cors = require('cors');
+require('dotenv').config();
+const app = require('./app'); // 👈 IMPORTA app.js (con las rutas de perfil)
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const app = express(); 
-app.use(cors()); 
-app.use(express.json()); 
-
-// 1. Conexión a la Base de Datos
+// ==========================================
+// CONEXIÓN DIRECTA A BD (para rutas que no están en app.js)
+// ==========================================
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -19,8 +16,10 @@ const pool = new Pool({
 });
 
 // ==========================================
-// 2. LA RUTA DE REGISTRO
+// RUTAS QUE NO ESTÁN EN app.js
 // ==========================================
+
+// Registro
 app.post('/registro', async (req, res) => {
   const { username, email, password, display_name, bio } = req.body;
 
@@ -49,9 +48,7 @@ app.post('/registro', async (req, res) => {
   }
 });
 
-// ==========================================
-// 3. LA RUTA DE LOGIN
-// ==========================================
+// Login (reemplaza el que está en app.js para usar pool directo)
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -70,26 +67,29 @@ app.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
-
-    res.status(200).json({ success: true, message: 'Inicio de sesión exitoso', token, user_id: user.id, username: user.username, display_name: user.display_name });
+    res.status(200).json({ 
+      success: true, 
+      message: 'Inicio de sesión exitoso', 
+      token, 
+      user_id: user.id, 
+      username: user.username, 
+      display_name: user.display_name 
+    });
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
 
-// ==========================================
-// RUTA PARA CREAR UN POST (SOLO TEXTO)
-// ==========================================
+// Crear post
 app.post('/crear-post', async (req, res) => {
   const { author_id, content } = req.body;
 
-  // Pequeña validación de seguridad en el backend
   if (!content || content.trim() === '') {
-      return res.status(400).json({ success: false, message: 'El contenido no puede estar vacío' });
+    return res.status(400).json({ success: false, message: 'El contenido no puede estar vacío' });
   }
 
   try {
@@ -109,42 +109,39 @@ app.post('/crear-post', async (req, res) => {
   }
 });
 
-// ==========================================
-// RUTA PARA OBTENER TODAS LAS PUBLICACIONES
-// ==========================================
+// Obtener posts
 app.get('/posts', async (req, res) => {
-    try {
-        /*Se realiza un join en la tabla de post de la BD para vincular (o unir) 
-        los post realizados con el autor que le corresponde. Lo anterior se filtra con el is_deleted = FALSE */
-        const query = `
-            SELECT 
-                p.id, 
-                p.content, 
-                p.created_at, 
-                u.display_name, 
-                u.username 
-            FROM posts p
-            JOIN users u ON p.author_id = u.id
-            WHERE p.is_deleted = FALSE
-            ORDER BY p.created_at DESC;
-        `;
-        
-        /*Se ordenan de forma que el más reciente sea el primero*/
-        const resultado = await pool.query(query);
-        
-        res.status(200).json({ 
-            success: true, 
-            posts: resultado.rows 
-        });
-    } catch (error) {
-        console.error('Error al obtener posts:', error);
-        res.status(500).json({ success: false, message: 'Error al cargar el muro' });
-    }
+  try {
+    const query = `
+      SELECT 
+        p.id, 
+        p.content, 
+        p.created_at, 
+        u.display_name, 
+        u.username 
+      FROM posts p
+      JOIN users u ON p.author_id = u.id
+      WHERE p.is_deleted = FALSE
+      ORDER BY p.created_at DESC;
+    `;
+    
+    const resultado = await pool.query(query);
+    
+    res.status(200).json({ 
+      success: true, 
+      posts: resultado.rows 
+    });
+  } catch (error) {
+    console.error('Error al obtener posts:', error);
+    res.status(500).json({ success: false, message: 'Error al cargar el muro' });
+  }
 });
+
 // ==========================================
-// 4. ENCIENDE EL SERVIDOR
+// INICIAR SERVIDOR
 // ==========================================
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-    console.log(`[SERVER] Niko-net Backend corriendo en http://localhost:${PORT}`);
+  console.log(`[SERVER] Niko-net Backend corriendo en http://localhost:${PORT}`);
+  console.log(`📍 Perfil: http://localhost:${PORT}/api/v1/profile/:username`);
 });

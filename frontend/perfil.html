@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Perfil - Niko-Net</title>
+    <link rel="stylesheet" href="css/base.css">
+    <script src="js/auth-check.js"></script>
+</head>
+<body>
+    <div class="perfil-card">
+        <h2>Perfil de Usuario</h2>
+        
+        <div id="vista-perfil">
+            <p><strong>Username:</strong> <span id="lbl-username">Cargando...</span></p>
+            <p><strong>Nombre:</strong> <span id="lbl-nombre">Cargando...</span></p>
+            <p><strong>Bio:</strong> <span id="lbl-bio">Cargando...</span></p>
+            <button id="btn-activar-edicion">Editar Perfil</button>
+        </div>
+
+        <div id="form-edicion" style="display: none;">
+            <form id="perfil-form">
+                <label>Nombre:</label>
+                <input type="text" id="input-nombre" required>
+                
+                <label>Biografía:</label>
+                <textarea id="input-bio"></textarea>
+                
+                <div class="botones">
+                    <button type="submit">Guardar Cambios</button>
+                    <button type="button" id="btn-cancelar">Cancelar</button>
+                </div>
+            </form>
+        </div>
+        <p id="mensaje"></p>
+    </div>
+
+    <script src="js/perfil.js"></script>
+</body>
+</html>
