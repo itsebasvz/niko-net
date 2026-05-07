@@ -122,6 +122,7 @@ app.get('/posts', async (req, res) => {
             SELECT 
                 p.id, 
                 p.content, 
+                p.author_id,
                 p.created_at, 
                 u.display_name, 
                 u.username 
