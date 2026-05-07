@@ -2,38 +2,110 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Mi Perfil - Niko-Net</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil — Niko-net</title>
     <link rel="stylesheet" href="css/base.css">
     <script src="js/auth-check.js"></script>
 </head>
 <body>
-    <div class="perfil-card">
-        <h2>Perfil de Usuario</h2>
+
+<div class="app-shell">
+    <aside class="nav-rail">
+        <div class="nav-logo">
+            <img src="assets/niko-logo.png" alt="Niko">
+            <span>niko<i>-</i>net</span>
+        </div>
+        <nav class="nav-list">
+            <button class="nav-item" onclick="window.location.href='inicio.html'">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>
+                <span>Inicio</span>
+            </button>
+            <button class="nav-item">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <span>Explorar</span>
+            </button>
+            <button class="nav-item active">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a7 7 0 0 1 13 0"/></svg>
+                <span>Perfil</span>
+            </button>
+        </nav>
         
-        <div id="vista-perfil">
-            <p><strong>Username:</strong> <span id="lbl-username">Cargando...</span></p>
-            <p><strong>Nombre:</strong> <span id="lbl-nombre">Cargando...</span></p>
-            <p><strong>Bio:</strong> <span id="lbl-bio">Cargando...</span></p>
-            <button id="btn-activar-edicion">Editar Perfil</button>
+        <div class="nav-user">
+            <div class="nav-avatar" id="navAvatar">?</div>
+            <div class="nav-user-info">
+                <div class="nav-user-name" id="navUserName">Usuario</div>
+                <div class="nav-user-handle" id="navUserHandle">@usuario</div>
+            </div>
+            <button class="nav-logout" onclick="cerrarSesion()" title="Cerrar sesión">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
         </div>
+    </aside>
 
-        <div id="form-edicion" style="display: none;">
-            <form id="perfil-form">
-                <label>Nombre:</label>
-                <input type="text" id="input-nombre" required>
-                
-                <label>Biografía:</label>
-                <textarea id="input-bio"></textarea>
-                
-                <div class="botones">
-                    <button type="submit">Guardar Cambios</button>
-                    <button type="button" id="btn-cancelar">Cancelar</button>
+    <main class="app-main">
+        <header class="feed-header">
+            <h2>Mi Perfil</h2>
+        </header>
+
+        <div class="post lit" id="vista-perfil" style="grid-template-columns: 80px 1fr; gap: 20px; padding: 24px;">
+            <div class="post-avatar" id="lbl-avatar" 
+                 style="width: 80px; height: 80px; font-size: 32px; background: linear-gradient(135deg, #f3c43b, #e07490); box-shadow: var(--glow-bulb);">
+                ?
+            </div>
+            
+            <div class="post-body" style="width: 100%; display: flex; flex-direction: column; justify-content: center;">
+                <div class="post-head" style="margin-bottom: 8px;">
+                    <span class="post-name" id="lbl-nombre" style="font-size: 20px;">Cargando...</span>
+                    <span class="post-handle" id="lbl-username" style="font-size: 15px;">@cargando</span>
                 </div>
-            </form>
+                <p id="lbl-bio" style="margin-bottom: 20px; color: var(--fg-2); line-height: 1.5;">Cargando biografía...</p>
+                
+                <div>
+                    <button class="btn-secondary btn-pill" id="btn-activar-edicion">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; vertical-align: middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <span style="vertical-align: middle;">Editar Perfil</span>
+                    </button>
+                </div>
+            </div>
         </div>
-        <p id="mensaje"></p>
-    </div>
 
-    <script src="js/perfil.js"></script>
+        <div class="composer" id="form-edicion" style="display: none; padding: 24px; grid-template-columns: 1fr;">
+            <div class="composer-body" style="width: 100%;">
+                <h3 class="preview-label" style="margin-bottom: 24px; display: block;">Editar información de cuenta</h3>
+                
+                <form id="perfil-form" style="width: 100%; display: flex; flex-direction: column; gap: 24px;">
+                    <div class="field" style="width: 100%; display: flex; flex-direction: column;">
+                        <span style="margin-bottom: 8px;">Nombre</span>
+                        <input type="text" id="input-nombre" placeholder="Tu nombre público" required 
+                               style="width: 100%; box-sizing: border-box; display: block;">
+                    </div>
+                    
+                    <div class="field" style="width: 100%; display: flex; flex-direction: column;">
+                        <span style="margin-bottom: 8px;">Biografía</span>
+                        <textarea id="input-bio" rows="6" placeholder="Cuéntanos sobre ti..." 
+                                  style="width: 100%; box-sizing: border-box; display: block; min-height: 120px; padding: 12px; font-family: var(--font-body); background: var(--bg-input); border: 1px solid var(--border-default); border-radius: var(--r-md); color: var(--fg-1); outline: none; resize: vertical;"></textarea>
+                    </div>
+                    
+                    <div class="composer-bar" style="border-top: 1px solid var(--border-subtle); padding-top: 20px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <p id="mensaje" style="font-size: 13px; margin: 0;"></p>
+                        <div class="composer-actions" style="display: flex; gap: 12px;">
+                            <button type="button" class="btn-secondary btn-pill" id="btn-cancelar">Cancelar</button>
+                            <button type="submit" class="btn-primary btn-pill">Guardar Cambios</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <aside class="right-rail">
+        <section class="rr-card">
+            <h3>Niko-net Info</h3>
+            <p class="trend-meta" style="line-height: 1.4;">Estás en el modo de edición. Asegúrate de guardar tus cambios antes de salir de esta página.</p>
+        </section>
+    </aside>
+</div>
+
+<script src="js/perfil.js"></script>
 </body>
 </html>
