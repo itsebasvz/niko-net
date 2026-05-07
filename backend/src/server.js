@@ -154,6 +154,64 @@ app.get('/posts', async (req, res) => {
     }
 });
 
+// Eliminar post (soft delete)
+app.delete('/posts/:id', async (req, res) => {
+  const postId = req.params.id;
+  const { user_id } = req.body;
+
+  // Validar que se proporcionó el user_id
+  if (!user_id) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Se requiere autenticación para eliminar publicaciones' 
+    });
+  }
+
+  try {
+    // Primero, verificar que el post existe y quién es el autor
+    const postQuery = await pool.query(
+      'SELECT author_id FROM posts WHERE id = $1 AND is_deleted = FALSE',
+      [postId]
+    );
+
+    if (postQuery.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Publicación no encontrada o ya fue eliminada' 
+      });
+    }
+
+    const post = postQuery.rows[0];
+
+    // Verificar que el usuario que intenta eliminar es el autor
+    if (post.author_id !== parseInt(user_id)) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'No tienes permiso para eliminar esta publicación' 
+      });
+    }
+
+    // Soft delete: marcar como eliminado
+    const deleteQuery = await pool.query(
+      'UPDATE posts SET is_deleted = TRUE WHERE id = $1 RETURNING *',
+      [postId]
+    );
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Publicación eliminada exitosamente',
+      post: deleteQuery.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Error al eliminar post:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error interno del servidor al eliminar la publicación' 
+    });
+  }
+});
+
 // ==========================================
 // INICIAR SERVIDOR
 // ==========================================
