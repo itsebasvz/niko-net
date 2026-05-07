@@ -1,7 +1,8 @@
 /* ==========================================================
    inicio.js — Lógica del feed principal de Niko-net
    Incluye: carga de posts, composer, truncado de contenido,
-   y modal overlay para visualización de post completo (RQF10).
+   modal overlay para visualización de post completo,
+   y ELIMINACIÓN DE POSTS (soft delete)
    ========================================================== */
 
 // Longitud máxima visible en el feed antes de truncar
@@ -85,7 +86,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return AVATAR_GRADIENTS[(id || 0) % AVATAR_GRADIENTS.length];
     }
 
-    // ---- FUNCIÓN: Renderizar un post en el feed ----
+    // ---- FUNCIÓN: Escapar HTML para evitar XSS ----
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ---- FUNCIÓN: Renderizar un post en el feed (con botón eliminar) ----
     function renderPost(post, isNew) {
         const avatarLetter = (post.display_name || 'U').charAt(0).toUpperCase();
         const ts = tiempoRelativo(post.created_at);
@@ -93,6 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const contenidoVisible = truncado
             ? post.content.substring(0, TRUNCAR_EN) + '…'
             : post.content;
+        
+        // Verificar si el usuario actual es el autor del post
+        const currentUserId = localStorage.getItem('nikonet_userId');
+        const esMiPost = currentUserId && parseInt(currentUserId) === post.author_id;
 
         const article = document.createElement('article');
         article.className = 'post' + (isNew ? ' lit' : '');
@@ -102,33 +115,43 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="post-main">
                 <header class="post-head">
-                    <span class="post-name">${post.display_name || 'Usuario'}</span>
-                    <span class="post-handle">@${post.username}</span>
+                    <span class="post-name">${escapeHtml(post.display_name) || 'Usuario'}</span>
+                    <span class="post-handle">@${escapeHtml(post.username)}</span>
                     <span class="post-ts">· ${ts}</span>
                 </header>
                 <div class="post-body">
-                    ${contenidoVisible}${truncado ? '<span class="ver-mas">Ver más</span>' : ''}
+                    ${escapeHtml(contenidoVisible)}${truncado ? '<span class="ver-mas">Ver más</span>' : ''}
                 </div>
                 <footer class="post-actions">
                     <button class="act">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         <span>0</span>
                     </button>
                     <button class="act">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
                         <span>0</span>
                     </button>
                     <button class="act">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                         <span>0</span>
                     </button>
+                    ${esMiPost ? `
+                        <button class="act btn-eliminar-post" data-post-id="${post.id}" data-author-id="${post.author_id}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                <line x1="10" y1="11" x2="10" y2="17"/>
+                                <line x1="14" y1="11" x2="14" y2="17"/>
+                            </svg>
+                            <span>Eliminar</span>
+                        </button>
+                    ` : ''}
                 </footer>
             </div>
         `;
 
-        // RQF10: Click en el post abre el modal con la publicación completa
+        // Click en el post abre el modal (excepto en botones)
         article.addEventListener('click', (e) => {
-            // No abrir modal si se hizo click en un botón de acción
             if (e.target.closest('.act')) return;
             abrirModal(post);
         });
@@ -150,11 +173,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${avatarLetter}
                 </div>
                 <div class="modal-post-author">
-                    <div class="modal-name">${post.display_name || 'Usuario'}</div>
-                    <div class="modal-handle">@${post.username}</div>
+                    <div class="modal-name">${escapeHtml(post.display_name) || 'Usuario'}</div>
+                    <div class="modal-handle">@${escapeHtml(post.username)}</div>
                 </div>
             </div>
-            <div class="modal-post-content">${post.content}</div>
+            <div class="modal-post-content">${escapeHtml(post.content)}</div>
             <div class="modal-post-meta">${fechaCompleta}</div>
         `;
 
@@ -176,16 +199,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===========================================================
     // RQF10: PREVISUALIZACIÓN DE POST ANTES DE PUBLICAR
-    // El usuario puede ver cómo se verá su post en el feed
-    // antes de publicarlo, con opción de editar o publicar.
     // ===========================================================
 
-    // Abrir modal de previsualización
     btnPreview.addEventListener('click', () => {
         const content = contenidoPost.value.trim();
         if (!content) return;
 
-        // Renderizar la tarjeta de preview simulando cómo se verá en el feed
         previewBody.innerHTML = `
             <div class="preview-label">Así se verá tu post en el feed</div>
             <div class="preview-card">
@@ -195,22 +214,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="post-main">
                         <header class="post-head">
-                            <span class="post-name">${displayName}</span>
-                            <span class="post-handle">@${username}</span>
+                            <span class="post-name">${escapeHtml(displayName)}</span>
+                            <span class="post-handle">@${escapeHtml(username)}</span>
                             <span class="post-ts">· ahora</span>
                         </header>
-                        <div class="post-body">${content}</div>
+                        <div class="post-body">${escapeHtml(content)}</div>
                         <footer class="post-actions">
                             <button class="act">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                                 <span>0</span>
                             </button>
                             <button class="act">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
                                 <span>0</span>
                             </button>
                             <button class="act">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                                 <span>0</span>
                             </button>
                         </footer>
@@ -223,7 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = 'hidden';
     });
 
-    // Cerrar modal de preview
     function cerrarPreview() {
         previewModal.style.display = 'none';
         document.body.style.overflow = '';
@@ -239,13 +257,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     previewCard.addEventListener('click', (e) => e.stopPropagation());
 
-    // Publicar directamente desde el modal de preview
     previewPublish.addEventListener('click', () => {
         cerrarPreview();
         formCrearPost.requestSubmit();
     });
 
-    // Escape cierra el modal que esté visible
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (previewModal.style.display === 'grid') cerrarPreview();
@@ -256,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- FUNCIÓN: Cargar posts del servidor ----
     async function cargarPosts(order = 'desc', date = '') {
         try {
-            // Construir URL dinámicamente con los parámetros
             const url = new URL('http://localhost:4000/posts');
             url.searchParams.append('order', order);
             if (date) {
@@ -284,25 +299,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Cargar posts iniciales con el orden seleccionado
+    // ---- ELIMINAR POST (Soft Delete) con EVENT DELEGATION ----
+    document.addEventListener('click', async (e) => {
+        const btnEliminar = e.target.closest('.btn-eliminar-post');
+        if (!btnEliminar) return;
+        
+        e.stopPropagation();
+        
+        const postId = btnEliminar.dataset.postId;
+        const authorId = parseInt(btnEliminar.dataset.authorId);
+        const currentUserId = parseInt(localStorage.getItem('nikonet_userId'));
+        
+        if (currentUserId !== authorId) {
+            mostrarToast('❌ Solo puedes eliminar tus propias publicaciones', true);
+            return;
+        }
+        
+        const confirmar = confirm('¿Estás seguro de que quieres eliminar esta publicación?');
+        if (!confirmar) return;
+        
+        try {
+            const response = await fetch(`http://localhost:4000/posts/${postId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: currentUserId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                mostrarToast('✅ Publicación eliminada exitosamente');
+                cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
+            } else {
+                mostrarToast('❌ Error: ' + data.message, true);
+            }
+        } catch (error) {
+            console.error('Error al eliminar:', error);
+            mostrarToast('❌ Error al eliminar la publicación', true);
+        }
+    });
+
+    // Cargar posts iniciales
     cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
 
     // ---- LÓGICA DEL CUSTOM DROPDOWN ----
     if (cdToggleBtn) {
-        // Abrir/cerrar menú
         cdToggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             cdMenu.classList.toggle('show');
         });
 
-        // Cerrar menú al hacer clic afuera
         document.addEventListener('click', () => {
             if (cdMenu.classList.contains('show')) {
                 cdMenu.classList.remove('show');
             }
         });
 
-        // Seleccionar una opción
         cdOptions.forEach(option => {
             option.addEventListener('click', () => {
                 cdOptions.forEach(opt => opt.classList.remove('active'));
@@ -315,14 +367,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Instancia de Flatpickr para el calendario
+    // Flatpickr para el calendario
     let fpInstance = null;
     if (feedDate) {
         fpInstance = flatpickr(feedDate, {
             locale: "es",
             dateFormat: "Y-m-d",
             disableMobile: "true",
-            monthSelectorType: "static", // Usa texto simple en lugar de un <select> para los meses
+            monthSelectorType: "static",
             onChange: function(selectedDates, dateStr, instance) {
                 if (dateStr) {
                     if (clearDateBtn) clearDateBtn.style.display = 'block';
@@ -334,7 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Botón para limpiar la fecha "X"
     if (clearDateBtn) {
         clearDateBtn.addEventListener('click', () => {
             if (fpInstance) fpInstance.clear();
@@ -374,6 +425,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error al publicar:', error);
             mostrarToast('No se pudo conectar con el servidor', true);
+        } finally {
+            btnPostear.disabled = false;
         }
     });
 
