@@ -1,0 +1,90 @@
+/* Estilos específicos para la vista de perfil */
+
+.profile-header {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #657786;
+    color: white;
+    font-size: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem auto;
+    font-weight: bold;
+}
+
+.profile-info-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.profile-info h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #14171a;
+}
+
+.profile-info .handle {
+    color: #657786;
+    font-size: 1rem;
+}
+
+.bio {
+    color: #14171a;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    color: #657786;
+}
+
+.profile-stats strong {
+    color: #14171a;
+}
+
+/* Botón Seguir */
+.btn-seguir {
+    background-color: #1da1f2;
+    color: white;
+    border: 2px solid #1da1f2;
+    padding: 0.5rem 1.5rem;
+    border-radius: 9999px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-seguir:hover {
+    background-color: #1a91da;
+    border-color: #1a91da;
+}
+
+.btn-seguir.btn-siguiendo {
+    background-color: white;
+    color: #1da1f2;
+    border: 2px solid #1da1f2;
+}
+
+.btn-seguir.btn-siguiendo:hover {
+    background-color: #f5f8fa;
+}
