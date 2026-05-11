@@ -159,8 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return article;
     }
 
-    // ---- FUNCIÓN: Abrir modal de post completo (RQF10) ----
-    function abrirModal(post) {
+    // ---- FUNCIÓN: Abrir modal de post completo con comentarios (RQF10 + RQF14) ----
+    async function abrirModal(post) {
         const avatarLetter = (post.display_name || 'U').charAt(0).toUpperCase();
         const fechaCompleta = new Date(post.created_at).toLocaleString('es-MX', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
@@ -179,10 +179,118 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="modal-post-content">${escapeHtml(post.content)}</div>
             <div class="modal-post-meta">${fechaCompleta}</div>
+
+            <!-- RQF14: Sección de comentarios -->
+            <div class="comments-section">
+                <div class="comments-title">Comentarios</div>
+
+                <!-- Formulario para escribir un comentario -->
+                <div class="comment-form">
+                    <div class="comment-form-avatar" style="background:${getAvatarBg(0)}">${avatar}</div>
+                    <div class="comment-input-wrap">
+                        <textarea id="commentInput" placeholder="Escribe un comentario…" rows="1" maxlength="500"></textarea>
+                        <button class="btn-comment" id="btnSendComment" disabled title="Enviar comentario">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de comentarios cargados del servidor -->
+                <div class="comments-list" id="commentsList">
+                    <div class="comments-empty">Cargando comentarios…</div>
+                </div>
+            </div>
         `;
 
         postModal.style.display = 'grid';
         document.body.style.overflow = 'hidden';
+
+        // Configurar el formulario de comentarios
+        const commentInput = document.getElementById('commentInput');
+        const btnSendComment = document.getElementById('btnSendComment');
+        const commentsList = document.getElementById('commentsList');
+
+        // Habilitar/deshabilitar botón de envío
+        commentInput.addEventListener('input', () => {
+            btnSendComment.disabled = commentInput.value.trim().length === 0;
+        });
+
+        // Enviar comentario al hacer click en el botón
+        btnSendComment.addEventListener('click', async () => {
+            const content = commentInput.value.trim();
+            const authorId = localStorage.getItem('nikonet_userId');
+            if (!content || !authorId) return;
+
+            btnSendComment.disabled = true;
+            try {
+                const resp = await fetch(`http://localhost:4000/posts/${post.id}/comments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ author_id: authorId, content })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    commentInput.value = '';
+                    cargarComentarios(post.id, commentsList);
+                    // Actualizar el contador de comentarios en el feed
+                    actualizarContadorComentarios(post.id);
+                } else {
+                    mostrarToast(data.message || 'Error al comentar', true);
+                }
+            } catch (err) {
+                console.error('Error al enviar comentario:', err);
+                mostrarToast('Error de conexión al enviar comentario', true);
+            }
+        });
+
+        // Enviar con Enter (Shift+Enter para nueva línea)
+        commentInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!btnSendComment.disabled) btnSendComment.click();
+            }
+        });
+
+        // Cargar los comentarios existentes
+        cargarComentarios(post.id, commentsList);
+    }
+
+    // ---- RQF14: Cargar comentarios de un post ----
+    async function cargarComentarios(postId, container) {
+        try {
+            const resp = await fetch(`http://localhost:4000/posts/${postId}/comments`);
+            const data = await resp.json();
+
+            if (data.success && data.comments.length > 0) {
+                container.innerHTML = data.comments.map(c => {
+                    const letra = (c.display_name || 'U').charAt(0).toUpperCase();
+                    return `
+                        <div class="comment">
+                            <div class="comment-avatar" style="background:${getAvatarBg(c.author_id)}">${letra}</div>
+                            <div class="comment-body">
+                                <div class="comment-head">
+                                    <span class="comment-name">${escapeHtml(c.display_name)}</span>
+                                    <span class="comment-handle">@${escapeHtml(c.username)}</span>
+                                    <span class="comment-ts">${tiempoRelativo(c.created_at)}</span>
+                                </div>
+                                <div class="comment-text">${escapeHtml(c.content)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<div class="comments-empty">Sé el primero en comentar ✨</div>';
+            }
+        } catch (err) {
+            console.error('Error al cargar comentarios:', err);
+            container.innerHTML = '<div class="comments-empty">Error al cargar comentarios</div>';
+        }
+    }
+
+    // ---- RQF14: Actualizar el contador de comentarios en el post del feed ----
+    function actualizarContadorComentarios(postId) {
+        // Recargar los posts para actualizar contadores
+        cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
     }
 
     // ---- FUNCIÓN: Cerrar modal de post publicado ----
