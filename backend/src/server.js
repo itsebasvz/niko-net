@@ -117,7 +117,7 @@ app.get('/posts', async (req, res) => {
     const order = orderParam === 'asc' ? 'ASC' : 'DESC';
 
     try {
-        /* Consulta base: JOIN entre posts y users, ignorando eliminados */
+        /* Consulta base: JOIN entre posts y users, con conteo de comentarios */
         let query = `
             SELECT 
                 p.id, 
@@ -125,7 +125,8 @@ app.get('/posts', async (req, res) => {
                 p.author_id,
                 p.created_at, 
                 u.display_name, 
-                u.username 
+                u.username,
+                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = FALSE) AS comment_count
             FROM posts p
             JOIN users u ON p.author_id = u.id
             WHERE p.is_deleted = FALSE
