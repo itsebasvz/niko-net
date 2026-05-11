@@ -123,9 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${escapeHtml(contenidoVisible)}${truncado ? '<span class="ver-mas">Ver más</span>' : ''}
                 </div>
                 <footer class="post-actions">
-                    <button class="act">
+                    <button class="act btn-comment-action" data-post-id="${post.id}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        <span>0</span>
+                        <span>${post.comment_count || 0}</span>
                     </button>
                     <button class="act">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
@@ -150,7 +150,16 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        // Click en el post abre el modal (excepto en botones)
+        // Click en botón de comentarios abre el modal directo a comentarios
+        const btnComment = article.querySelector('.btn-comment-action');
+        if (btnComment) {
+            btnComment.addEventListener('click', (e) => {
+                e.stopPropagation();
+                abrirModal(post);
+            });
+        }
+
+        // Click en el resto del post abre el modal (excepto botones de acción)
         article.addEventListener('click', (e) => {
             if (e.target.closest('.act')) return;
             abrirModal(post);
