@@ -214,6 +214,80 @@ app.delete('/posts/:id', async (req, res) => {
 });
 
 // ==========================================
+// RQF14: MÓDULO DE COMENTARIOS
+// ==========================================
+
+// Crear un comentario en un post
+app.post('/posts/:id/comments', async (req, res) => {
+  const postId = req.params.id;
+  const { author_id, content } = req.body;
+
+  // Validar que se envió contenido
+  if (!content || content.trim() === '') {
+    return res.status(400).json({ success: false, message: 'El comentario no puede estar vacío' });
+  }
+
+  // Validar longitud máxima (500 chars según schema)
+  if (content.length > 500) {
+    return res.status(400).json({ success: false, message: 'El comentario no puede superar los 500 caracteres' });
+  }
+
+  try {
+    // Verificar que el post existe y no está eliminado
+    const postCheck = await pool.query(
+      'SELECT id FROM posts WHERE id = $1 AND is_deleted = FALSE',
+      [postId]
+    );
+
+    if (postCheck.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Publicación no encontrada' });
+    }
+
+    // Insertar el comentario
+    const result = await pool.query(
+      `INSERT INTO comments (post_id, author_id, content)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [postId, author_id, content.trim()]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: '¡Comentario publicado!',
+      comment: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error al crear comentario:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// Obtener comentarios de un post
+app.get('/posts/:id/comments', async (req, res) => {
+  const postId = req.params.id;
+
+  try {
+    const result = await pool.query(
+      `SELECT c.id, c.content, c.created_at, c.author_id,
+              u.display_name, u.username
+       FROM comments c
+       JOIN users u ON c.author_id = u.id
+       WHERE c.post_id = $1 AND c.is_deleted = FALSE
+       ORDER BY c.created_at ASC`,
+      [postId]
+    );
+
+    res.status(200).json({
+      success: true,
+      comments: result.rows
+    });
+  } catch (error) {
+    console.error('Error al obtener comentarios:', error);
+    res.status(500).json({ success: false, message: 'Error al cargar comentarios' });
+  }
+});
+
+// ==========================================
 // INICIAR SERVIDOR
 // ==========================================
 const PORT = process.env.PORT || 4000;
