@@ -131,9 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
                         <span>0</span>
                     </button>
-                    <button class="act">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                        <span>0</span>
+                    <button class="act btn-like-action ${post.liked_by_me ? 'liked' : ''}" data-post-id="${post.id}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="${post.liked_by_me ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        <span class="like-count">${post.total_likes || 0}</span>
                     </button>
                     ${esMiPost ? `
                         <button class="act btn-eliminar-post" data-post-id="${post.id}" data-author-id="${post.author_id}">
@@ -391,6 +391,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const url = new URL('http://localhost:4000/posts');
             url.searchParams.append('order', order);
+
+            // Enviamos el ID del usuario actual para saber sus likes
+            const currentUserId = localStorage.getItem('nikonet_userId');
+            url.searchParams.append('user_id', currentUserId || 0);
             if (date) {
                 url.searchParams.append('date', date);
             }
@@ -416,34 +420,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ---- ELIMINAR POST (Soft Delete) con EVENT DELEGATION ----
-    document.addEventListener('click', async (e) => {
-        const btnEliminar = e.target.closest('.btn-eliminar-post');
-        if (!btnEliminar) return;
-        
+    // ---- ELIMINAR POST (Soft Delete) + LIKE/UNLIKE con EVENT DELEGATION ----
+document.addEventListener('click', async (e) => {
+    // -------------------- ELIMINAR POST --------------------
+    const btnEliminar = e.target.closest('.btn-eliminar-post');
+    if (btnEliminar) {
         e.stopPropagation();
-        
+
         const postId = btnEliminar.dataset.postId;
         const authorId = parseInt(btnEliminar.dataset.authorId);
         const currentUserId = parseInt(localStorage.getItem('nikonet_userId'));
-        
+
         if (currentUserId !== authorId) {
             mostrarToast('❌ Solo puedes eliminar tus propias publicaciones', true);
             return;
         }
-        
+
         const confirmar = confirm('¿Estás seguro de que quieres eliminar esta publicación?');
         if (!confirmar) return;
-        
+
         try {
             const response = await fetch(`http://localhost:4000/posts/${postId}`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: currentUserId })
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 mostrarToast('✅ Publicación eliminada exitosamente');
                 cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
@@ -454,7 +458,63 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error al eliminar:', error);
             mostrarToast('❌ Error al eliminar la publicación', true);
         }
-    });
+        return; // Evita que se ejecute la lógica de like si se eliminó
+    }
+
+    // -------------------- DAR/QUITAR LIKE --------------------
+    const btnLike = e.target.closest('.btn-like-action');
+    if (!btnLike) return;
+
+    e.stopPropagation();
+
+    const postId = btnLike.dataset.postId;
+    const currentUserId = parseInt(localStorage.getItem('nikonet_userId'));
+
+    if (!currentUserId) {
+        mostrarToast('❌ Debes iniciar sesión para dar like', true);
+        return;
+    }
+
+    // Evitar múltiples clics mientras se procesa
+    if (btnLike.disabled) return;
+    btnLike.disabled = true;
+
+    try {
+        // Asumiendo un endpoint que recibe POST y maneja like/unlike (toggle)
+        const response = await fetch(`http://localhost:4000/posts/${postId}/like`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: currentUserId })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Actualizar contador de likes
+            const likeCountSpan = btnLike.querySelector('.like-count');
+            if (likeCountSpan) {
+                likeCountSpan.textContent = data.likes_count;
+            }
+
+            // Cambiar clase/estilo según si el usuario dio like o quitó
+            if (data.liked) {
+                btnLike.classList.add('liked');
+                // Opcional: mostrar toast "Like agregado"
+                // mostrarToast('❤️ Like agregado');
+            } else {
+                btnLike.classList.remove('liked');
+                // Opcional: mostrar toast "Like eliminado"
+            }
+        } else {
+            mostrarToast('❌ Error al procesar el like: ' + data.message, true);
+        }
+    } catch (error) {
+        console.error('Error al dar like:', error);
+        mostrarToast('❌ Error de conexión al dar like', true);
+    } finally {
+        btnLike.disabled = false;
+    }
+});
 
     // Cargar posts iniciales
     cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');

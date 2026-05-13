@@ -33,7 +33,7 @@ app.post('/registro', async (req, res) => {
       return res.status(400).json({ success: false, message: 'El correo o el nombre de usuario ya están registrados' });
     }
 
-    const password_hash = await bcrypt.hash(password, 10);
+    const password_hash = await bcrypt.hash(password, 10);  
 
     await pool.query(
       'INSERT INTO users (username, email, password_hash, display_name, bio) VALUES ($1, $2, $3, $4, $5)',
@@ -110,14 +110,15 @@ app.post('/crear-post', async (req, res) => {
 });
 
 // Obtener posts
+// Obtener posts (Actualizado con Likes y Comentarios)
 app.get('/posts', async (req, res) => {
-    // Validar el parámetro 'order' para evitar inyecciones SQL
-    // Si no viene, por defecto será descendente (más recientes primero)
     const orderParam = (req.query.order || '').toLowerCase();
     const order = orderParam === 'asc' ? 'ASC' : 'DESC';
+    
+    // Recibimos el user_id (puede venir en query) para saber si él le dio like
+    const currentUserId = req.query.user_id || 0; 
 
     try {
-        /* Consulta base: JOIN entre posts y users, con conteo de comentarios */
         let query = `
             SELECT 
                 p.id, 
@@ -126,24 +127,24 @@ app.get('/posts', async (req, res) => {
                 p.created_at, 
                 u.display_name, 
                 u.username,
-                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = FALSE) AS comment_count
+                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = FALSE) AS comment_count,
+                (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS total_likes,
+                EXISTS(SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = $1) AS liked_by_me
             FROM posts p
             JOIN users u ON p.author_id = u.id
             WHERE p.is_deleted = FALSE
         `;
-        const values = [];
+        // currentUserId siempre será $1
+        const values = [currentUserId];
 
-        // Si el usuario envía una fecha específica, agregamos el filtro
-        // Convertimos el timestamp a la zona horaria local (-06:00) para que las fechas coincidan correctamente
+        // Si hay fecha, se convierte en $2
         if (req.query.date) {
-            query += ` AND DATE(p.created_at AT TIME ZONE 'America/Mexico_City') = $1`;
+            query += ` AND DATE(p.created_at AT TIME ZONE 'America/Mexico_City') = $2`;
             values.push(req.query.date);
         }
 
-        // Finalmente concatenamos el ordenamiento dinámico
         query += ` ORDER BY p.created_at ${order};`;
         
-        /* Ejecutar la consulta pasando los valores seguros */
         const resultado = await pool.query(query, values);
         
         res.status(200).json({ 
@@ -285,6 +286,49 @@ app.get('/posts/:id/comments', async (req, res) => {
   } catch (error) {
     console.error('Error al obtener comentarios:', error);
     res.status(500).json({ success: false, message: 'Error al cargar comentarios' });
+  }
+});
+
+// ==========================================
+// SISTEMA DE LIKES
+// ==========================================
+app.post('/posts/:id/like', async (req, res) => {
+  const postId = req.params.id;
+  const { user_id } = req.body;
+
+  if (!user_id) {
+    return res.status(400).json({ success: false, message: 'Se requiere el ID del usuario' });
+  }
+
+  try {
+    const likeExistente = await pool.query(
+      'SELECT * FROM likes WHERE user_id = $1 AND post_id = $2',
+      [user_id, postId]
+    );
+
+    if (likeExistente.rows.length > 0) {
+      // Quitar like
+      await pool.query('DELETE FROM likes WHERE user_id = $1 AND post_id = $2', [user_id, postId]);
+      // Obtener nuevo conteo
+      const { rows } = await pool.query('SELECT COUNT(*) AS likes_count FROM likes WHERE post_id = $1', [postId]);
+      return res.status(200).json({ 
+        success: true, 
+        liked: false, 
+        likes_count: parseInt(rows[0].likes_count) 
+      });
+    } else {
+      // Agregar like
+      await pool.query('INSERT INTO likes (user_id, post_id) VALUES ($1, $2)', [user_id, postId]);
+      const { rows } = await pool.query('SELECT COUNT(*) AS likes_count FROM likes WHERE post_id = $1', [postId]);
+      return res.status(200).json({ 
+        success: true, 
+        liked: true, 
+        likes_count: parseInt(rows[0].likes_count) 
+      });
+    }
+  } catch (error) {
+    console.error('Error en toggle de like:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
 

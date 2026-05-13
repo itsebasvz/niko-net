@@ -1,6 +1,5 @@
 -- Contraseñas en texto plano para los seeds: "password123"
 -- El hash corresponde a esa contraseña usando bcrypt.
--- En un entorno real, las contraseñas jamás deben guardarse ni verse en texto plano.
 INSERT INTO users (id, username, email, password_hash, display_name, bio) VALUES 
 (1, 'sebas', 'sebas@nikonet.com', '$2b$10$tZ2.L29ZfH08nE7Z/t.b2u4Hj.1LhY82Uv/iLz49rA2u5j8A08qC6', 'Sebastián VZ', 'Creador de niko-net! Apasionado por el backend.'),
 (2, 'maria_dev', 'maria@nikonet.com', '$2b$10$tZ2.L29ZfH08nE7Z/t.b2u4Hj.1LhY82Uv/iLz49rA2u5j8A08qC6', 'María DB', 'Desarrolladora Fullstack | Amante del código y de PostgreSQL'),
