@@ -1,22 +1,63 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Registrate en Niko-net</title>
-        <link rel="stylesheet" href="css/base.css">
-    </head>
-    <body>
-        <h2>Registrarse</h2>
-        <form id="registroForm">
-            <input type="text" id="username" placeholder="Elige tu username" required>
-            <input type="email" id="email" placeholder="Correo electrónico" required>
-            <input type="password" id="password" placeholder="Crea una contraseña" required>
-            <input type="text" id="display_name" placeholder="Escribe tu nombre" required>
-            <input type="text" id="bio" placeholder="¡Cuentale al mundo de ti!">
-            <button type="submit">Crear cuenta</button>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear cuenta — Niko-net</title>
+    <link rel="stylesheet" href="css/base.css">
+</head>
+<body>
+    <div class="auth-page">
+        <div class="auth-bg">
+            <span class="px" style="left:10%;top:22%;background:#ffd95a;width:6px;height:6px;animation-delay:0s"></span>
+            <span class="px" style="left:82%;top:10%;background:#f1a3b8;width:4px;height:4px;animation-delay:0.3s"></span>
+            <span class="px" style="left:72%;top:78%;background:#ffd95a;width:8px;height:8px;animation-delay:0.6s"></span>
+            <span class="px" style="left:22%;top:82%;background:#f1a3b8;width:5px;height:5px;animation-delay:0.9s"></span>
+            <span class="px" style="left:48%;top:5%;background:#ffd95a;width:4px;height:4px;animation-delay:1.2s"></span>
+            <span class="px" style="left:92%;top:48%;background:#f1a3b8;width:6px;height:6px;animation-delay:1.5s"></span>
+            <span class="px" style="left:3%;top:62%;background:#ffd95a;width:5px;height:5px;animation-delay:1.8s"></span>
+            <img class="auth-niko" src="assets/niko-character.png" alt="">
+        </div>
+
+        <form class="auth-card" id="registroForm">
+            <div class="auth-logo">
+                <img src="assets/niko-logo.png" alt="Niko">
+            </div>
+            <h1 class="auth-title">Crea tu cuenta</h1>
+            <p class="auth-sub">280 caracteres. Cada post, una chispa.</p>
+
+            <label class="field">
+                <span>Username</span>
+                <input type="text" id="username" placeholder="@tu_usuario" required>
+            </label>
+            <label class="field">
+                <span>Correo electrónico</span>
+                <input type="email" id="email" placeholder="tú@ejemplo.com" required>
+            </label>
+            <label class="field">
+                <span>Contraseña</span>
+                <input type="password" id="password" placeholder="Crea una contraseña segura" required>
+            </label>
+            <label class="field">
+                <span>Nombre para mostrar</span>
+                <input type="text" id="display_name" placeholder="Tu nombre" required>
+            </label>
+            <label class="field">
+                <span>Bio</span>
+                <input type="text" id="bio" placeholder="¡Cuéntale al mundo de ti!">
+            </label>
+
+            <button type="submit" class="btn-primary auth-submit">Crear cuenta</button>
+
+            <div id="message" class="auth-msg" style="display:none;"></div>
+
+            <div class="auth-switch">
+                ¿Ya tienes cuenta?
+                <a href="login.html">Inicia sesión</a>
+            </div>
         </form>
-        
-        <script src="js/registro.js"></script>
-    </body>
+    </div>
+
+    <script src="js/registro.js"></script>
+</body>
 </html>
