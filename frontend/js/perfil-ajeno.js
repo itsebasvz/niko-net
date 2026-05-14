@@ -30,13 +30,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetUsername = params.get('username');
 
     if (!targetUsername) {
-        window.location.href = 'inicio.html';
+        window.location.href = 'inicio';
         return;
     }
 
     // Si es mi propio perfil, redirigir a perfil.html
     if (targetUsername === myUsername) {
-        window.location.href = 'perfil.html';
+        window.location.href = 'perfil';
         return;
     }
 
