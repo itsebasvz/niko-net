@@ -47,6 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const cdOptions = document.querySelectorAll('.cd-option');
     let currentOrderValue = 'desc';
 
+    // RQF16: Variables de las pestañas de filtrado (Para ti / Siguiendo)
+    const feedTabs = document.querySelectorAll('.feed-tabs .tab');
+    let currentFilterValue = 'all';
+
     // Cargar info del usuario en el nav rail
     const displayName = localStorage.getItem('nikonet_displayName') || 'Usuario';
     const username = localStorage.getItem('nikonet_username') || 'usuario';
@@ -403,6 +407,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 url.searchParams.append('date', date);
             }
 
+            // RQF16: Inyectar filtro por cuentas seguidas si está activa la pestaña
+            if (currentFilterValue === 'following') {
+                const currentUserId = localStorage.getItem('nikonet_userId');
+                url.searchParams.append('filter', 'following');
+                if (currentUserId) {
+                    url.searchParams.append('user_id', currentUserId);
+                }
+            }
+
             const response = await fetch(url);
             const data = await response.json();
 
@@ -410,7 +423,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 muroPosts.innerHTML = '';
 
                 if (data.posts.length === 0) {
-                    muroPosts.innerHTML = '<div class="empty">Aún no hay posts. ¿Qué tal si conjuras el primero?</div>';
+                    if (currentFilterValue === 'following') {
+                        muroPosts.innerHTML = '<div class="empty">Aún no hay publicaciones de las personas a las que sigues. ¡Explora y sigue a más creadores!</div>';
+                    } else {
+                        muroPosts.innerHTML = '<div class="empty">Aún no hay posts. ¿Qué tal si conjuras el primero?</div>';
+                    }
                     return;
                 }
 
@@ -463,6 +480,34 @@ document.addEventListener('DOMContentLoaded', () => {
             mostrarToast('❌ Error al eliminar la publicación', true);
         }
     });
+
+    // RQF16: Event Listeners para las pestañas de filtrado del feed
+    if (feedTabs && feedTabs.length > 0) {
+        feedTabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const esSiguiendo = tab.textContent.trim().toLowerCase() === 'siguiendo';
+                
+                if (esSiguiendo) {
+                    const currentUserId = localStorage.getItem('nikonet_userId');
+                    if (!currentUserId) {
+                        // Redirigir a iniciar sesión si no hay usuario
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    currentFilterValue = 'following';
+                } else {
+                    currentFilterValue = 'all';
+                }
+
+                // Actualizar estado visual de las pestañas
+                feedTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Recargar publicaciones con los filtros correspondientes
+                cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
+            });
+        });
+    }
 
     // Cargar posts iniciales
     cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');

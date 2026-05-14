@@ -115,6 +115,13 @@ app.get('/posts', async (req, res) => {
     // Si no viene, por defecto será descendente (más recientes primero)
     const orderParam = (req.query.order || '').toLowerCase();
     const order = orderParam === 'asc' ? 'ASC' : 'DESC';
+    const filter = req.query.filter;
+    const userId = req.query.user_id;
+
+    // Si se solicita filtrar por siguiendo, requerimos el user_id
+    if (filter === 'following' && !userId) {
+        return res.status(400).json({ success: false, message: 'Se requiere la sesión del usuario para filtrar por cuentas seguidas' });
+    }
 
     try {
         /* Consulta base: JOIN entre posts y users, con conteo de comentarios */
@@ -133,11 +140,17 @@ app.get('/posts', async (req, res) => {
         `;
         const values = [];
 
+        // Filtro por personas a las que sigue el usuario
+        if (filter === 'following') {
+            values.push(userId);
+            query += ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = $${values.length})`;
+        }
+
         // Si el usuario envía una fecha específica, agregamos el filtro
         // Convertimos el timestamp a la zona horaria local (-06:00) para que las fechas coincidan correctamente
         if (req.query.date) {
-            query += ` AND DATE(p.created_at AT TIME ZONE 'America/Mexico_City') = $1`;
             values.push(req.query.date);
+            query += ` AND DATE(p.created_at AT TIME ZONE 'America/Mexico_City') = $${values.length}`;
         }
 
         // Finalmente concatenamos el ordenamiento dinámico
