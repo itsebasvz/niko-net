@@ -120,10 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
         article.className = 'post' + (isNew ? ' lit' : '');
 
         // Determinar URL del perfil (propio vs ajeno)
-        // Nota: sin .html para evitar que serve haga 301 y pierda los query params
         const perfilUrl = esMiPost
-            ? 'perfil'
-            : `perfil-ajeno?username=${encodeURIComponent(post.username)}`;
+            ? 'perfil.html'
+            : `perfil-ajeno.html?username=${encodeURIComponent(post.username)}`;
 
         article.innerHTML = `
             <a href="${perfilUrl}" class="post-avatar post-profile-link" style="background:${getAvatarBg(post.id)}">
@@ -147,9 +146,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
                         <span>0</span>
                     </button>
-                    <button class="act">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                        <span>0</span>
+                    <button class="act btn-like-post" data-post-id="${post.id}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" 
+                             fill="${post.is_liked ? '#e07490' : 'none'}" 
+                             stroke="${post.is_liked ? '#e07490' : 'currentColor'}" 
+                             stroke-width="2" class="like-icon">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                        <span class="like-count">${post.like_count || 0}</span>
                     </button>
                     ${esMiPost ? `
                         <button class="act btn-eliminar-post" data-post-id="${post.id}" data-author-id="${post.author_id}">
