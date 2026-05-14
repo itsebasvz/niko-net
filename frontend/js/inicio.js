@@ -47,9 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const cdOptions = document.querySelectorAll('.cd-option');
     let currentOrderValue = 'desc';
 
-    // RQF16: Variables de las pestañas de filtrado (Para ti / Siguiendo)
+    // RQF16: Variables de las pestañas de filtrado (Para ti / Siguiendo) y sub-filtro v2
     const feedTabs = document.querySelectorAll('.feed-tabs .tab');
     let currentFilterValue = 'all';
+    const followingUserFilter = document.getElementById('followingUserFilter');
+    const fufToggleBtn = document.getElementById('fufToggleBtn');
+    const fufMenu = document.getElementById('fufMenu');
+    const fufSelectedText = document.getElementById('fufSelectedText');
+    let currentSpecificAuthorId = '';
 
     // Cargar info del usuario en el nav rail
     const displayName = localStorage.getItem('nikonet_displayName') || 'Usuario';
@@ -414,6 +419,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentUserId) {
                     url.searchParams.append('user_id', currentUserId);
                 }
+                if (currentSpecificAuthorId) {
+                    url.searchParams.append('specific_author_id', currentSpecificAuthorId);
+                }
             }
 
             const response = await fetch(url);
@@ -495,8 +503,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
                     currentFilterValue = 'following';
+                    if (followingUserFilter) {
+                        followingUserFilter.style.display = 'inline-block';
+                        cargarListaSeguidos(currentUserId);
+                    }
                 } else {
                     currentFilterValue = 'all';
+                    currentSpecificAuthorId = '';
+                    if (followingUserFilter) followingUserFilter.style.display = 'none';
+                    if (fufSelectedText) fufSelectedText.textContent = 'Todos los seguidos';
                 }
 
                 // Actualizar estado visual de las pestañas
@@ -509,6 +524,55 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // RQF16 v2: Cargar dinámicamente la lista de seguidos en el sub-filtro
+    async function cargarListaSeguidos(userId) {
+        if (!fufMenu) return;
+        try {
+            const response = await fetch(`http://localhost:4000/users/${userId}/following-list`);
+            const data = await response.json();
+
+            if (data.success) {
+                // Generar HTML interno con la opción predeterminada
+                let html = `<div class="cd-option ${currentSpecificAuthorId === '' ? 'active' : ''}" data-value="">Todos los seguidos</div>`;
+                
+                data.following.forEach(user => {
+                    const isActive = currentSpecificAuthorId === String(user.id) ? 'active' : '';
+                    html += `<div class="cd-option ${isActive}" data-value="${user.id}">${user.display_name} (@${user.username})</div>`;
+                });
+
+                fufMenu.innerHTML = html;
+
+                // Adjuntar listeners a las nuevas opciones
+                const fufOptions = fufMenu.querySelectorAll('.cd-option');
+                fufOptions.forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        fufOptions.forEach(opt => opt.classList.remove('active'));
+                        option.classList.add('active');
+                        
+                        fufSelectedText.textContent = option.textContent.split(' (@')[0]; // Mostrar solo el nombre de visualización
+                        currentSpecificAuthorId = option.getAttribute('data-value');
+                        fufMenu.classList.remove('show');
+                        
+                        cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
+                    });
+                });
+            }
+        } catch (err) {
+            console.error('Error al cargar lista de seguidos:', err);
+        }
+    }
+
+    // Toggle para el menú de sub-filtro v2
+    if (fufToggleBtn) {
+        fufToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (fufMenu) fufMenu.classList.toggle('show');
+            // Cerrar el otro si está abierto
+            if (cdMenu && cdMenu.classList.contains('show')) cdMenu.classList.remove('show');
+        });
+    }
+
     // Cargar posts iniciales
     cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
 
@@ -517,12 +581,13 @@ document.addEventListener('DOMContentLoaded', () => {
         cdToggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             cdMenu.classList.toggle('show');
+            // Cerrar el sub-filtro de seguidos si está abierto
+            if (fufMenu && fufMenu.classList.contains('show')) fufMenu.classList.remove('show');
         });
 
         document.addEventListener('click', () => {
-            if (cdMenu.classList.contains('show')) {
-                cdMenu.classList.remove('show');
-            }
+            if (cdMenu && cdMenu.classList.contains('show')) cdMenu.classList.remove('show');
+            if (fufMenu && fufMenu.classList.contains('show')) fufMenu.classList.remove('show');
         });
 
         cdOptions.forEach(option => {

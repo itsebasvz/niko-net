@@ -117,6 +117,7 @@ app.get('/posts', async (req, res) => {
     const order = orderParam === 'asc' ? 'ASC' : 'DESC';
     const filter = req.query.filter;
     const userId = req.query.user_id;
+    const specificAuthorId = req.query.specific_author_id;
 
     // Si se solicita filtrar por siguiendo, requerimos el user_id
     if (filter === 'following' && !userId) {
@@ -140,10 +141,15 @@ app.get('/posts', async (req, res) => {
         `;
         const values = [];
 
-        // Filtro por personas a las que sigue el usuario
+        // Filtro por personas a las que sigue el usuario o un autor específico (v2)
         if (filter === 'following') {
-            values.push(userId);
-            query += ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = $${values.length})`;
+            if (specificAuthorId) {
+                values.push(specificAuthorId);
+                query += ` AND p.author_id = $${values.length}`;
+            } else {
+                values.push(userId);
+                query += ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = $${values.length})`;
+            }
         }
 
         // Si el usuario envía una fecha específica, agregamos el filtro
@@ -447,6 +453,30 @@ app.post('/users/:username/follow', async (req, res) => {
   } catch (error) {
     console.error('Error al seguir/dejar de seguir:', error);
     res.status(500).json({ success: false, message: 'Error interno' });
+  }
+});
+
+// Obtener la lista detallada de usuarios a los que sigue un usuario (RQF16 v2)
+app.get('/users/:user_id/following-list', async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.username, u.display_name
+       FROM users u
+       JOIN follows f ON f.following_id = u.id
+       WHERE f.follower_id = $1
+       ORDER BY u.display_name ASC`,
+      [user_id]
+    );
+
+    res.status(200).json({
+      success: true,
+      following: result.rows
+    });
+  } catch (error) {
+    console.error('Error al obtener la lista de seguidos:', error);
+    res.status(500).json({ success: false, message: 'Error interno al cargar cuentas seguidas' });
   }
 });
 
