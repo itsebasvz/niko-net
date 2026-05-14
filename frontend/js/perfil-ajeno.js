@@ -241,9 +241,14 @@ document.addEventListener("DOMContentLoaded", () => {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
                         <span>0</span>
                     </button>
-                    <button class="act">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                        <span>0</span>
+                    <button class="act btn-like-post" data-post-id="${post.id}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" 
+                             fill="${post.is_liked ? '#e07490' : 'none'}" 
+                             stroke="${post.is_liked ? '#e07490' : 'currentColor'}" 
+                             stroke-width="2" class="like-icon">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                        <span class="like-count">${post.like_count || 0}</span>
                     </button>
                 </footer>
             </div>
@@ -257,6 +262,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return article;
     }
+
+    // ===========================================================
+    // DAR/QUITAR LIKE EN PERFIL AJENO
+    // ===========================================================
+    document.addEventListener('click', async (e) => {
+        const btnLike = e.target.closest('.btn-like-post');
+        if (btnLike) {
+            e.stopPropagation();
+            const postId = btnLike.dataset.postId;
+            
+            // Ya tienes myUserId declarado arriba en este archivo
+            if (!myUserId) {
+                mostrarToast('Inicia sesión para dar like', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:4000/posts/like`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ post_id: postId, user_id: myUserId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const svg = btnLike.querySelector('svg');
+                    const spanCount = btnLike.querySelector('.like-count');
+                    
+                    if (data.action === 'liked') {
+                        svg.setAttribute('fill', '#e07490');
+                        svg.setAttribute('stroke', '#e07490');
+                        spanCount.textContent = parseInt(spanCount.textContent) + 1;
+                    } else if (data.action === 'unliked') {
+                        svg.setAttribute('fill', 'none');
+                        svg.setAttribute('stroke', 'currentColor');
+                        spanCount.textContent = Math.max(0, parseInt(spanCount.textContent) - 1);
+                    }
+                }
+            } catch (error) {
+                console.error('Error procesando el like:', error);
+            }
+        }
+    });
 
     // ===========================================================
     // MODAL DE POST COMPLETO
