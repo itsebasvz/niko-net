@@ -456,6 +456,47 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- ELIMINAR POST (Soft Delete) con EVENT DELEGATION ----
     document.addEventListener('click', async (e) => {
         const btnEliminar = e.target.closest('.btn-eliminar-post');
+        const btnLike = e.target.closest('.btn-like-post'); 
+        
+        if (btnLike) {
+            e.stopPropagation();
+            const postId = btnLike.dataset.postId;
+            const currentUserId = localStorage.getItem('nikonet_userId');
+            if (!currentUserId) {
+                mostrarToast('Inicia sesión para dar like', true);
+                return;
+            }
+
+            try {
+                // Hacer la petición al backend
+                const response = await fetch(`http://localhost:4000/posts/like`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ post_id: postId, user_id: currentUserId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Actualizar el DOM directamente
+                    const svg = btnLike.querySelector('svg');
+                    const spanCount = btnLike.querySelector('.like-count');
+                    
+                    if (data.action === 'liked') {
+                        svg.setAttribute('fill', '#e07490');
+                        svg.setAttribute('stroke', '#e07490');
+                        spanCount.textContent = parseInt(spanCount.textContent) + 1;
+                    } else if (data.action === 'unliked') {
+                        svg.setAttribute('fill', 'none');
+                        svg.setAttribute('stroke', 'currentColor');
+                        spanCount.textContent = Math.max(0, parseInt(spanCount.textContent) - 1);
+                    }
+                }
+            } catch (error) {
+                console.error('Error procesando el like:', error);
+            }
+            return; // Detener la ejecución para que no pase al código de eliminar
+        }
         if (!btnEliminar) return;
         
         e.stopPropagation();

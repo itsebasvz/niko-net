@@ -234,6 +234,56 @@ app.delete('/posts/:id', async (req, res) => {
 });
 
 // ==========================================
+// SISTEMA DE LIKES
+// ==========================================
+app.post('/posts/like', async (req, res) => {
+  const { post_id, user_id } = req.body;
+
+  if (!post_id || !user_id) {
+    return res.status(400).json({ success: false, message: 'Faltan datos' });
+  }
+
+  try {
+    // 1. Verificar si el usuario ya le dio like a este post
+    const result = await pool.query(
+      'SELECT * FROM likes WHERE post_id = $1 AND user_id = $2', 
+      [post_id, user_id]
+    );
+
+    if (result.rows.length > 0) {
+      // Ya tiene like -> Quitar el like (DELETE)
+      await pool.query(
+        'DELETE FROM likes WHERE post_id = $1 AND user_id = $2', 
+        [post_id, user_id]
+      );
+      // Restar 1 al contador en la tabla posts
+      await pool.query(
+        'UPDATE posts SET like_count = GREATEST(0, like_count - 1) WHERE id = $1', 
+        [post_id]
+      );
+      
+      return res.status(200).json({ success: true, action: 'unliked' });
+    } else {
+      // No tiene like -> Agregar el like (INSERT)
+      await pool.query(
+        'INSERT INTO likes (post_id, user_id) VALUES ($1, $2)', 
+        [post_id, user_id]
+      );
+      // Sumar 1 al contador en la tabla posts
+      await pool.query(
+        'UPDATE posts SET like_count = like_count + 1 WHERE id = $1', 
+        [post_id]
+      );
+
+      return res.status(200).json({ success: true, action: 'liked' });
+    }
+  } catch (error) {
+    console.error('Error en /posts/like:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+
+// ==========================================
 // RQF14: MÓDULO DE COMENTARIOS
 // ==========================================
 

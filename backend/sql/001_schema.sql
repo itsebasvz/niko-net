@@ -35,6 +35,7 @@ CREATE TABLE posts (
     -- Soft delete: marcamos el registro como eliminado en lugar de borrarlo físicamente.
     -- Esto evita que likes y comentarios queden huérfanos en la base de datos.
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    like_count INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
