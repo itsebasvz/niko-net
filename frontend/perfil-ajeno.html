@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Usuario — Niko-net</title>
+    <link rel="stylesheet" href="css/base.css">
+    <script src="js/auth-check.js"></script>
+</head>
+<body>
+
+<div class="app-shell">
+    <!-- ========== NAV RAIL (izquierda) ========== -->
+    <aside class="nav-rail">
+        <div class="nav-logo">
+            <img src="assets/niko-logo.png" alt="Niko">
+            <span>niko<i>-</i>net</span>
+        </div>
+        <nav class="nav-list">
+            <button class="nav-item" onclick="window.location.href='inicio.html'">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>
+                <span>Inicio</span>
+            </button>
+            <button class="nav-item">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <span>Explorar</span>
+            </button>
+            <button class="nav-item" onclick="window.location.href='perfil.html'">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a7 7 0 0 1 13 0"/></svg>
+                <span>Perfil</span>
+            </button>
+        </nav>
+        
+        <div class="nav-user" style="margin-top: auto;">
+            <div class="nav-avatar" id="navAvatar">?</div>
+            <div class="nav-user-info">
+                <div class="nav-user-name" id="navUserName">Usuario</div>
+                <div class="nav-user-handle" id="navUserHandle">@usuario</div>
+            </div>
+            <button class="nav-logout" onclick="cerrarSesion()" title="Cerrar sesión">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ========== MAIN FEED (centro) ========== -->
+    <main class="app-main">
+        <header class="feed-header">
+            <h2 id="header-title">Perfil</h2>
+        </header>
+
+        <!-- Tarjeta de Perfil -->
+        <div class="post lit" id="vista-perfil" style="grid-template-columns: 80px 1fr; gap: 20px; padding: 24px;">
+            <div class="post-avatar" id="lbl-avatar" 
+                 style="width: 80px; height: 80px; font-size: 32px; background: linear-gradient(135deg, #f3c43b, #e07490); box-shadow: var(--glow-bulb);">
+                ?
+            </div>
+            
+            <div class="post-body" style="width: 100%; display: flex; flex-direction: column; justify-content: center;">
+                <div class="post-head" style="margin-bottom: 8px;">
+                    <span class="post-name" id="lbl-nombre" style="font-size: 20px;">Cargando...</span>
+                    <span class="post-handle" id="lbl-username" style="font-size: 15px;">@cargando</span>
+                </div>
+                <p id="lbl-bio" style="margin-bottom: 20px; color: var(--fg-2); line-height: 1.5;">Cargando biografía...</p>
+                
+                <div style="display: flex; gap: 16px; margin-bottom: 20px; font-family: var(--font-mono); font-size: 13px; color: var(--fg-3);">
+                    <div><span style="color: var(--fg-1); font-weight: 700; font-family: var(--font-body);" id="lbl-siguiendo">0</span> Siguiendo</div>
+                    <div><span style="color: var(--fg-1); font-weight: 700; font-family: var(--font-body);" id="lbl-seguidores">0</span> Seguidores</div>
+                </div>
+                
+                <div>
+                    <button class="btn-primary btn-pill" id="btn-seguir">
+                        Seguir
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="feed-divider"><span>Posts del usuario</span></div>
+
+        <!-- Filtro de ordenamiento -->
+        <div class="feed-filter" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 0 16px 16px 16px;">
+            <div class="custom-dropdown" id="feedOrderDropdown" data-value="desc">
+                <button class="btn-secondary btn-pill cd-toggle" id="cdToggleBtn" style="padding: 5px 12px; font-size: 0.85em; cursor: pointer; outline: none; height: 32px; display: flex; align-items: center; gap: 8px;">
+                    <span id="cdSelectedText">Más recientes primero</span>
+                    <span style="font-size: 0.8em;">▼</span>
+                </button>
+                <div class="cd-menu" id="cdMenu">
+                    <div class="cd-option active" data-value="desc">Más recientes primero</div>
+                    <div class="cd-option" data-value="asc">Más antiguos primero</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Posts se inyectan aquí -->
+        <div class="post-list" id="muro-posts"></div>
+    </main>
+
+    <!-- ========== RIGHT RAIL (derecha) ========== -->
+    <aside class="right-rail">
+        <div class="rr-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input placeholder="Buscar en niko-net" disabled>
+        </div>
+        <section class="rr-card">
+            <h3>Tendencias para ti</h3>
+            <ul class="trend-list">
+                <li><a class="trend-tag">#JavaScript</a><span class="trend-meta">Tendencia en tecnología</span></li>
+                <li><a class="trend-tag">#CleanCode</a><span class="trend-meta">Buenas prácticas</span></li>
+                <li><a class="trend-tag">#OpenSource</a><span class="trend-meta">Comunidad</span></li>
+                <li><a class="trend-tag">#PostgreSQL</a><span class="trend-meta">Bases de datos</span></li>
+            </ul>
+        </section>
+        <footer class="rr-footer">
+            <a>Acerca</a> · <a>Privacidad</a> · <a>Términos</a>
+            <div>© 2026 niko-net</div>
+        </footer>
+    </aside>
+</div>
+
+<!-- Modal overlay para ver post publicado -->
+<div class="modal-overlay" id="postModal" style="display:none;">
+    <div class="modal-card" id="modalCard">
+        <header class="modal-head">
+            <button class="modal-close" id="modalClose">×</button>
+            <span class="modal-title">Post</span>
+        </header>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script src="js/perfil-ajeno.js"></script>
+</body>
+</html>

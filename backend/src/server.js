@@ -289,6 +289,155 @@ app.get('/posts/:id/comments', async (req, res) => {
 });
 
 // ==========================================
+// RQF17: VISTA DE PERFIL AJENO
+// ==========================================
+
+// Obtener perfil completo de un usuario (con contadores reales)
+app.get('/users/:username/profile', async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    // Datos básicos del usuario
+    const userResult = await pool.query(
+      'SELECT id, username, display_name, bio, created_at FROM users WHERE username = $1',
+      [username]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    const user = userResult.rows[0];
+
+    // Contadores reales de seguidores, siguiendo y posts
+    const [followersRes, followingRes, postsRes] = await Promise.all([
+      pool.query('SELECT COUNT(*) FROM follows WHERE following_id = $1', [user.id]),
+      pool.query('SELECT COUNT(*) FROM follows WHERE follower_id = $1', [user.id]),
+      pool.query('SELECT COUNT(*) FROM posts WHERE author_id = $1 AND is_deleted = FALSE', [user.id])
+    ]);
+
+    res.status(200).json({
+      success: true,
+      user: {
+        ...user,
+        followers_count: parseInt(followersRes.rows[0].count),
+        following_count: parseInt(followingRes.rows[0].count),
+        posts_count: parseInt(postsRes.rows[0].count)
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener perfil:', error);
+    res.status(500).json({ success: false, message: 'Error al cargar perfil' });
+  }
+});
+
+// Obtener posts de un usuario específico
+app.get('/users/:username/posts', async (req, res) => {
+  const { username } = req.params;
+  const orderParam = (req.query.order || '').toLowerCase();
+  const order = orderParam === 'asc' ? 'ASC' : 'DESC';
+
+  try {
+    const result = await pool.query(
+      `SELECT p.id, p.content, p.author_id, p.created_at,
+              u.display_name, u.username,
+              (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = FALSE) AS comment_count
+       FROM posts p
+       JOIN users u ON p.author_id = u.id
+       WHERE u.username = $1 AND p.is_deleted = FALSE
+       ORDER BY p.created_at ${order}`,
+      [username]
+    );
+
+    res.status(200).json({
+      success: true,
+      posts: result.rows
+    });
+  } catch (error) {
+    console.error('Error al obtener posts del usuario:', error);
+    res.status(500).json({ success: false, message: 'Error al cargar posts del usuario' });
+  }
+});
+
+// Verificar si el usuario actual sigue a otro
+app.get('/users/:username/is-following', async (req, res) => {
+  const { username } = req.params;
+  const followerId = req.query.follower_id;
+
+  if (!followerId) {
+    return res.status(400).json({ success: false, message: 'Se requiere follower_id' });
+  }
+
+  try {
+    const targetUser = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+    if (targetUser.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    const result = await pool.query(
+      'SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = $2',
+      [followerId, targetUser.rows[0].id]
+    );
+
+    res.status(200).json({
+      success: true,
+      is_following: result.rows.length > 0
+    });
+  } catch (error) {
+    console.error('Error al verificar follow:', error);
+    res.status(500).json({ success: false, message: 'Error interno' });
+  }
+});
+
+// Seguir / Dejar de seguir a un usuario
+app.post('/users/:username/follow', async (req, res) => {
+  const { username } = req.params;
+  const { follower_id } = req.body;
+
+  if (!follower_id) {
+    return res.status(400).json({ success: false, message: 'Se requiere follower_id' });
+  }
+
+  try {
+    const targetUser = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+    if (targetUser.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    const targetId = targetUser.rows[0].id;
+
+    if (parseInt(follower_id) === targetId) {
+      return res.status(400).json({ success: false, message: 'No puedes seguirte a ti mismo' });
+    }
+
+    // Verificar si ya sigue
+    const existing = await pool.query(
+      'SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = $2',
+      [follower_id, targetId]
+    );
+
+    if (existing.rows.length > 0) {
+      // Dejar de seguir
+      await pool.query(
+        'DELETE FROM follows WHERE follower_id = $1 AND following_id = $2',
+        [follower_id, targetId]
+      );
+      res.status(200).json({ success: true, action: 'unfollowed', message: 'Has dejado de seguir a este usuario' });
+    } else {
+      // Seguir
+      await pool.query(
+        'INSERT INTO follows (follower_id, following_id) VALUES ($1, $2)',
+        [follower_id, targetId]
+      );
+      res.status(200).json({ success: true, action: 'followed', message: '¡Ahora sigues a este usuario!' });
+    }
+  } catch (error) {
+    console.error('Error al seguir/dejar de seguir:', error);
+    res.status(500).json({ success: false, message: 'Error interno' });
+  }
+});
+
+// ==========================================
 // INICIAR SERVIDOR
 // ==========================================
 const PORT = process.env.PORT || 4000;

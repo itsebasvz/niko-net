@@ -111,6 +111,10 @@ img { max-width: 100%; }
 .post-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
 .post-name { font-family: var(--font-display); font-weight: 700; font-size: 15px; }
 .post-handle, .post-ts { font-family: var(--font-mono); font-size: 13px; color: var(--fg-3); }
+.post-profile-link { text-decoration: none; color: inherit; cursor: pointer; transition: opacity var(--dur-2) var(--ease-out); }
+a.post-name:hover { text-decoration: underline; }
+a.post-handle:hover { color: var(--niko-yellow-400); }
+a.post-avatar:hover { opacity: 0.8; }
 .post-body { font-size: 15px; line-height: 1.55; color: var(--fg-1); }
 .post-body .ver-mas { color: var(--niko-yellow-400); font-family: var(--font-mono); font-size: 13px; cursor: pointer; margin-left: 4px; }
 .post-body .ver-mas:hover { text-decoration: underline; }
