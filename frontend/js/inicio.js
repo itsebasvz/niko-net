@@ -109,14 +109,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const article = document.createElement('article');
         article.className = 'post' + (isNew ? ' lit' : '');
+
+        // Determinar URL del perfil (propio vs ajeno)
+        // Nota: sin .html para evitar que serve haga 301 y pierda los query params
+        const perfilUrl = esMiPost
+            ? 'perfil'
+            : `perfil-ajeno?username=${encodeURIComponent(post.username)}`;
+
         article.innerHTML = `
-            <div class="post-avatar" style="background:${getAvatarBg(post.id)}">
+            <a href="${perfilUrl}" class="post-avatar post-profile-link" style="background:${getAvatarBg(post.id)}">
                 ${avatarLetter}
-            </div>
+            </a>
             <div class="post-main">
                 <header class="post-head">
-                    <span class="post-name">${escapeHtml(post.display_name) || 'Usuario'}</span>
-                    <span class="post-handle">@${escapeHtml(post.username)}</span>
+                    <a href="${perfilUrl}" class="post-name post-profile-link">${escapeHtml(post.display_name) || 'Usuario'}</a>
+                    <a href="${perfilUrl}" class="post-handle post-profile-link">@${escapeHtml(post.username)}</a>
                     <span class="post-ts">· ${ts}</span>
                 </header>
                 <div class="post-body">
@@ -159,9 +166,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Click en el resto del post abre el modal (excepto botones de acción)
+        // Click en el resto del post abre el modal (excepto links de perfil y botones)
         article.addEventListener('click', (e) => {
             if (e.target.closest('.act')) return;
+            if (e.target.closest('.post-profile-link')) return;
             abrirModal(post);
         });
 
