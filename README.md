@@ -15,61 +15,77 @@ Está orientada a toda la comunidad tecnológica:
 - **Backend**: Node.js, Express, JWT
 - **Base de Datos**: PostgreSQL (ejecutada mediante Docker)
 
-## Base de Datos
-
-El modelo de datos relacional almacena la información central de los usuarios, sus publicaciones, interacciones y sesiones activas.
-
-| Tabla | Se relaciona con | Tipo | Descripción |
-|---|---|---|---|
-| USERS | POSTS | 1 a muchos | Un usuario puede escribir muchas publicaciones |
-| USERS | COMMENTS | 1 a muchos | Un usuario puede escribir muchos comentarios |
-| USERS | FOLLOWS | 1 a muchos | Un usuario puede seguir a muchos otros |
-| USERS | LIKES | 1 a muchos | Un usuario puede dar like a muchos posts |
-| USERS | REFRESH_TOKENS | 1 a muchos | Un usuario puede tener varios tokens de sesión |
-| POSTS | COMMENTS | 1 a muchos | Un post puede recibir muchos comentarios |
-| POSTS | LIKES | 1 a muchos | Un post puede recibir muchos likes |
-
-*Nota: Se implementa **soft delete** (borrado lógico a través de un flag `is_deleted`) en publicaciones y comentarios para preservar el historial sin perder referencias en la base de datos.*
-
-→ [Documentación técnica completa](docs/database.md)
-
 ## Requisitos Previos
 - [Node.js](https://nodejs.org/) (v18+)
 - [Docker](https://www.docker.com/) y Docker Compose
+- [Git](https://git-scm.com/)
 
 ## Instalación y Ejecución Local
 
-1. **Clonar el repositorio**
-   ```bash
-   git clone https://github.com/itsebasvz/niko-net.git
-   cd niko-net
-   ```
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/itsebasvz/niko-net.git
+cd niko-net
+```
 
-2. **Levantar la base de datos**
-   Asegúrate de que Docker esté corriendo y ejecuta:
-   ```bash
-   docker compose up -d
-   ```
-   *Esto iniciará PostgreSQL y automáticamente creará las tablas base y un seed de prueba (usuarios y posts)*
+### 2. Levantar la base de datos (Docker)
+Asegúrate de que Docker Desktop esté corriendo:
+```bash
+docker compose up -d
+```
 
-3. **Configurar el Backend**
-   ```bash
-   cd backend
-   npm install
-   ```
-   Crea un archivo `.env` en la carpeta `backend` guiándote del `.env.example`:
-   ```bash
-   cp .env.example .env
-   ```
+Si es la **primera vez** que levantas el proyecto, el contenedor ejecutará automáticamente los scripts SQL de `backend/sql/`. Si necesitas **reiniciar la BD desde cero** (schema + datos de prueba):
+```bash
+docker exec -i nikonet_db psql -U postgres -d nikonet < backend/sql/001_schema.sql
+docker exec -i nikonet_db psql -U postgres -d nikonet < backend/sql/002_seed.sql
+```
 
-4. **Correr el servidor Backend**
-   ```bash
-   npm run dev
-   ```
-   El servidor de API correrá en `http://localhost:3000`
+### 3. Instalar dependencias del backend
+```bash
+cd backend
+npm install
+```
 
-5. **Levantar el Frontend**
-   Puedes abrir `frontend/index.html` directamente en tu navegador, o usar la extensión *Live Server* de VS Code (puerto típico: 5500).
+### 4. Configurar variables de entorno
+Crea un archivo `.env` en la carpeta `backend` (o cópialo del ejemplo):
+```bash
+cp .env.example .env
+```
+
+Las variables necesarias son:
+```
+PORT=4000
+DB_HOST=localhost
+DB_PORT=5433
+DB_USER=postgres
+DB_PASSWORD=password
+DB_NAME=nikonet
+JWT_SECRET=super_secret_jwt_key_123
+JWT_REFRESH_SECRET=super_secret_jwt_refresh_key_123
+```
+
+### 5. Levantar el backend
+```bash
+npm run dev
+```
+El servidor correrá en **http://localhost:4000**.
+
+### 6. Levantar el frontend
+Desde la raíz del proyecto:
+```bash
+cd ..
+npx serve frontend
+```
+El frontend se servirá en **http://localhost:3000**.
+
+### 7. ¡Listo!
+Abre http://localhost:3000 en tu navegador. Puedes registrar un usuario nuevo o usar los del seed:
+- `sebas@test.com` / `password123`
+
+## Documentación
+- [Modelo relacional de la BD](docs/modelo_relacional.md)
+- [RQF10 — Visualización de post](docs/RQF10_visualizacion_post.md)
+- [RQF14 — Módulo de comentarios](docs/RQF14_modulo_comentarios.md)
 
 ## Licencia
 MIT
