@@ -110,65 +110,62 @@ app.post('/crear-post', async (req, res) => {
 });
 
 // Obtener posts
+// Obtener posts (Actualizado para Likes)
 app.get('/posts', async (req, res) => {
-    // Validar el parámetro 'order' para evitar inyecciones SQL
-    // Si no viene, por defecto será descendente (más recientes primero)
     const orderParam = (req.query.order || '').toLowerCase();
     const order = orderParam === 'asc' ? 'ASC' : 'DESC';
     const filter = req.query.filter;
-    const userId = req.query.user_id;
+    const userId = req.query.user_id; // Ahora extraemos siempre el user_id
     const specificAuthorId = req.query.specific_author_id;
 
-    // Si se solicita filtrar por siguiendo, requerimos el user_id
     if (filter === 'following' && !userId) {
-        return res.status(400).json({ success: false, message: 'Se requiere la sesión del usuario para filtrar por cuentas seguidas' });
+        return res.status(400).json({ success: false, message: 'Se requiere la sesión del usuario' });
     }
 
     try {
-        /* Consulta base: JOIN entre posts y users, con conteo de comentarios */
+        const values = [];
+        let isLikedQuery = 'FALSE';
+
+        // Si el usuario está logueado, preparamos la subconsulta para saber si dio like
+        if (userId) {
+            values.push(userId);
+            isLikedQuery = `EXISTS(SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = $1)`;
+        }
+
         let query = `
             SELECT 
                 p.id, 
                 p.content, 
                 p.author_id,
                 p.created_at, 
+                p.like_count, 
                 u.display_name, 
                 u.username,
-                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = FALSE) AS comment_count
+                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = FALSE) AS comment_count,
+                ${isLikedQuery} AS is_liked
             FROM posts p
             JOIN users u ON p.author_id = u.id
             WHERE p.is_deleted = FALSE
         `;
-        const values = [];
 
-        // Filtro por personas a las que sigue el usuario o un autor específico (v2)
         if (filter === 'following') {
             if (specificAuthorId) {
                 values.push(specificAuthorId);
                 query += ` AND p.author_id = $${values.length}`;
             } else {
-                values.push(userId);
-                query += ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = $${values.length})`;
+                query += ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = $1)`;
             }
         }
 
-        // Si el usuario envía una fecha específica, agregamos el filtro
-        // Convertimos el timestamp a la zona horaria local (-06:00) para que las fechas coincidan correctamente
         if (req.query.date) {
             values.push(req.query.date);
             query += ` AND DATE(p.created_at AT TIME ZONE 'America/Mexico_City') = $${values.length}`;
         }
 
-        // Finalmente concatenamos el ordenamiento dinámico
         query += ` ORDER BY p.created_at ${order};`;
         
-        /* Ejecutar la consulta pasando los valores seguros */
         const resultado = await pool.query(query, values);
-        
-        res.status(200).json({ 
-            success: true, 
-            posts: resultado.rows 
-        });
+        res.status(200).json({ success: true, posts: resultado.rows });
     } catch (error) {
         console.error('Error al obtener posts:', error);
         res.status(500).json({ success: false, message: 'Error al cargar el muro' });
@@ -400,28 +397,35 @@ app.get('/users/:username/profile', async (req, res) => {
   }
 });
 
-// Obtener posts de un usuario específico
+// Obtener posts de un usuario específico (Actualizado para Likes)
 app.get('/users/:username/posts', async (req, res) => {
   const { username } = req.params;
   const orderParam = (req.query.order || '').toLowerCase();
   const order = orderParam === 'asc' ? 'ASC' : 'DESC';
+  const userId = req.query.user_id; // Necesitamos saber quién está viendo el perfil
 
   try {
+    const values = [username];
+    let isLikedQuery = 'FALSE';
+
+    if (userId) {
+        values.push(userId);
+        isLikedQuery = `EXISTS(SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = $2)`;
+    }
+
     const result = await pool.query(
-      `SELECT p.id, p.content, p.author_id, p.created_at,
+      `SELECT p.id, p.content, p.author_id, p.created_at, p.like_count,
               u.display_name, u.username,
-              (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = FALSE) AS comment_count
+              (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = FALSE) AS comment_count,
+              ${isLikedQuery} AS is_liked
        FROM posts p
        JOIN users u ON p.author_id = u.id
        WHERE u.username = $1 AND p.is_deleted = FALSE
        ORDER BY p.created_at ${order}`,
-      [username]
+      values
     );
 
-    res.status(200).json({
-      success: true,
-      posts: result.rows
-    });
+    res.status(200).json({ success: true, posts: result.rows });
   } catch (error) {
     console.error('Error al obtener posts del usuario:', error);
     res.status(500).json({ success: false, message: 'Error al cargar posts del usuario' });
