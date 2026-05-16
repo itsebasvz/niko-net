@@ -188,10 +188,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Click en el resto del post abre el modal (excepto links de perfil y botones)
+        // Click en el resto del post abre el modal (excepto links de perfil y botones), también ignora 
+        // los click si ocurren dentro del nuevo formulario de edición
         article.addEventListener('click', (e) => {
             if (e.target.closest('.act')) return;
             if (e.target.closest('.post-profile-link')) return;
+            if (e.target.closest('.inline-edit-form')) return; 
             abrirModal(post);
         });
 
@@ -766,6 +768,49 @@ document.addEventListener('DOMContentLoaded', () => {
         const textarea = editForm.querySelector('.edit-textarea');
         textarea.focus();
         textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+
+        // 8. Botón de Guardar: Enviar al backend
+        editForm.querySelector('.btn-save-edit').addEventListener('click', async (ev) => {
+            ev.stopPropagation(); // Detener el burbujeo
+            const btnSave = ev.target;
+            const newContent = textarea.value.trim();
+            const currentUserId = localStorage.getItem('nikonet_userId');
+            
+            // Validaciones rápidas
+            if (!newContent) return; 
+            if (newContent === rawContent) {
+                editForm.querySelector('.btn-cancel-edit').click(); // Si no cambió nada, solo cierra
+                return;
+            }
+
+            btnSave.disabled = true;
+            btnSave.textContent = '...';
+
+            try {
+                const response = await fetch(`http://localhost:4000/posts/${postId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: currentUserId, content: newContent })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Recargar los posts para que aplique tu lógica de truncado (los 140 caracteres)
+                    cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
+                    mostrarToast('✅ ¡Publicación actualizada!');
+                } else {
+                    mostrarToast('❌ Error: ' + data.message, true);
+                    btnSave.disabled = false;
+                    btnSave.textContent = 'Guardar';
+                }
+            } catch (error) {
+                console.error('Error al editar:', error);
+                mostrarToast('❌ Error de red', true);
+                btnSave.disabled = false;
+                btnSave.textContent = 'Guardar';
+            }
+        });
     });
 
     // ---- TOAST ----
