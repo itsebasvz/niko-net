@@ -231,6 +231,47 @@ app.delete('/posts/:id', async (req, res) => {
 });
 
 // ==========================================
+// EDITAR POST (Actualizar contenido)
+// ==========================================
+app.put('/posts/:id', async (req, res) => {
+  const postId = req.params.id;
+  const { user_id, content } = req.body;
+
+  // Validaciones
+  if (!user_id || !content || content.trim() === '') {
+    return res.status(400).json({ success: false, message: 'Datos incompletos o vacíos' });
+  }
+
+  try {
+    // 1. Verificar que el post existe y que el usuario es el verdadero autor
+    const checkQuery = await pool.query(
+      'SELECT author_id FROM posts WHERE id = $1 AND is_deleted = FALSE',
+      [postId]
+    );
+
+    if (checkQuery.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Publicación no encontrada' });
+    }
+
+    if (checkQuery.rows[0].author_id !== parseInt(user_id)) {
+      return res.status(403).json({ success: false, message: 'No tienes permiso para editar esto' });
+    }
+
+    // 2. Ejecutar la actualización en PostgreSQL
+    await pool.query(
+      'UPDATE posts SET content = $1, updated_at = NOW() WHERE id = $2',
+      [content.trim(), postId]
+    );
+
+    res.status(200).json({ success: true, message: 'Publicación actualizada correctamente' });
+
+  } catch (error) {
+    console.error('Error al editar post:', error);
+    res.status(500).json({ success: false, message: 'Error interno al actualizar' });
+  }
+});
+
+// ==========================================
 // SISTEMA DE LIKES
 // ==========================================
 app.post('/posts/like', async (req, res) => {
