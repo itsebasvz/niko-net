@@ -531,6 +531,47 @@ app.get('/users/:user_id/following-list', async (req, res) => {
 });
 
 // ==========================================
+// RQNF01: BUSCADOR DE USUARIOS
+// ==========================================
+
+app.get('/users/search', async (req, res) => {
+  const query = (req.query.q || '').trim();
+  const excludeId = req.query.exclude_id;
+
+  if (query.length < 2) {
+    return res.status(200).json({ success: true, users: [] });
+  }
+
+  try {
+    const searchTerm = `%${query}%`;
+    let sqlQuery = `
+      SELECT id, username, display_name, bio
+      FROM users
+      WHERE (username ILIKE $1 OR display_name ILIKE $1)
+    `;
+    const values = [searchTerm];
+
+    // Excluir al usuario actual si se proporciona
+    if (excludeId) {
+      sqlQuery += ` AND id != $2`;
+      values.push(excludeId);
+    }
+
+    sqlQuery += ` ORDER BY username ASC LIMIT 10`;
+
+    const result = await pool.query(sqlQuery, values);
+
+    res.status(200).json({
+      success: true,
+      users: result.rows
+    });
+  } catch (error) {
+    console.error('Error al buscar usuarios:', error);
+    res.status(500).json({ success: false, message: 'Error al buscar usuarios' });
+  }
+});
+
+// ==========================================
 // INICIAR SERVIDOR
 // ==========================================
 const PORT = process.env.PORT || 4000;
