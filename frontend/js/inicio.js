@@ -721,4 +721,74 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
+
+    // ===========================================================
+    // RQNF01: BUSCADOR DE USUARIOS
+    // ===========================================================
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    let searchTimeout = null;
+
+    if (searchInput && searchResults) {
+        // Debounce: esperar 300ms después de que el usuario deje de escribir
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            const query = searchInput.value.trim();
+
+            if (query.length < 2) {
+                searchResults.classList.remove('open');
+                searchResults.innerHTML = '';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => buscarUsuarios(query), 300);
+        });
+
+        // Cerrar el dropdown al hacer click fuera
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.rr-search')) {
+                searchResults.classList.remove('open');
+            }
+        });
+
+        // Reabrir al enfocar si hay texto
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim().length >= 2 && searchResults.innerHTML) {
+                searchResults.classList.add('open');
+            }
+        });
+    }
+
+    async function buscarUsuarios(query) {
+        const myId = localStorage.getItem('nikonet_userId') || '';
+
+        try {
+            const resp = await fetch(`http://localhost:4000/users/search?q=${encodeURIComponent(query)}&exclude_id=${myId}`);
+            const data = await resp.json();
+
+            if (!data.success || data.users.length === 0) {
+                searchResults.innerHTML = '<div class="search-empty">No se encontraron usuarios</div>';
+                searchResults.classList.add('open');
+                return;
+            }
+
+            searchResults.innerHTML = data.users.map(u => {
+                const letra = (u.display_name || u.username).charAt(0).toUpperCase();
+                const bg = getAvatarBg(u.id);
+                return `
+                    <a href="perfil-ajeno?username=${encodeURIComponent(u.username)}" class="search-result-item">
+                        <div class="search-result-avatar" style="background:${bg}">${letra}</div>
+                        <div class="search-result-info">
+                            <span class="search-result-name">${escapeHtml(u.display_name || u.username)}</span>
+                            <span class="search-result-handle">@${escapeHtml(u.username)}</span>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+
+            searchResults.classList.add('open');
+        } catch (err) {
+            console.error('Error al buscar usuarios:', err);
+        }
+    }
 });
