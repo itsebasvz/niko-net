@@ -380,6 +380,69 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarPerfil();
     verificarFollow();
     cargarPosts(currentOrder);
+
+    // ===========================================================
+    // RQNF01: BUSCADOR DE USUARIOS
+    // ===========================================================
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    let searchTimeout = null;
+
+    if (searchInput && searchResults) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            const query = searchInput.value.trim();
+            if (query.length < 2) {
+                searchResults.classList.remove('open');
+                searchResults.innerHTML = '';
+                return;
+            }
+            searchTimeout = setTimeout(() => buscarUsuarios(query), 300);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.rr-search')) {
+                searchResults.classList.remove('open');
+            }
+        });
+
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim().length >= 2 && searchResults.innerHTML) {
+                searchResults.classList.add('open');
+            }
+        });
+    }
+
+    async function buscarUsuarios(query) {
+        try {
+            const resp = await fetch(`http://localhost:4000/users/search?q=${encodeURIComponent(query)}&exclude_id=${myUserId || ''}`);
+            const data = await resp.json();
+
+            if (!data.success || data.users.length === 0) {
+                searchResults.innerHTML = '<div class="search-empty">No se encontraron usuarios</div>';
+                searchResults.classList.add('open');
+                return;
+            }
+
+            searchResults.innerHTML = data.users.map(u => {
+                const letra = (u.display_name || u.username).charAt(0).toUpperCase();
+                const bg = getAvatarBg(u.id);
+                return `
+                    <a href="perfil-ajeno?username=${encodeURIComponent(u.username)}" class="search-result-item">
+                        <div class="search-result-avatar" style="background:${bg}">${letra}</div>
+                        <div class="search-result-info">
+                            <span class="search-result-name">${escapeHtml(u.display_name || u.username)}</span>
+                            <span class="search-result-handle">@${escapeHtml(u.username)}</span>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+
+            searchResults.classList.add('open');
+        } catch (err) {
+            console.error('Error al buscar usuarios:', err);
+        }
+    }
 });
 
 // Función global para cerrar sesión (usada por el botón del nav rail)
