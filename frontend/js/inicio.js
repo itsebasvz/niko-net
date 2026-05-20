@@ -416,13 +416,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 url.searchParams.append('date', date);
             }
 
+            // SIEMPRE enviar el ID del usuario para calcular los likes
+            const currentUserId = localStorage.getItem('nikonet_userId');
+            if (currentUserId) {
+                url.searchParams.append('user_id', currentUserId);
+            }
+
             // RQF16: Inyectar filtro por cuentas seguidas si está activa la pestaña
             if (currentFilterValue === 'following') {
-                const currentUserId = localStorage.getItem('nikonet_userId');
                 url.searchParams.append('filter', 'following');
-                if (currentUserId) {
-                    url.searchParams.append('user_id', currentUserId);
-                }
                 if (currentSpecificAuthorId) {
                     url.searchParams.append('specific_author_id', currentSpecificAuthorId);
                 }

@@ -184,8 +184,17 @@ document.addEventListener("DOMContentLoaded", () => {
     async function cargarPosts(order) {
         const container = document.getElementById("muro-posts");
 
+        // Obtener el ID del usuario actual (logueado)
+        const myUserId = localStorage.getItem('nikonet_userId');
+
         try {
-            const resp = await fetch(`http://localhost:4000/users/${targetUsername}/posts?order=${order}`);
+            // Añadir parámetro user_id a la URL
+            let url = `http://localhost:4000/users/${targetUsername}/posts?order=${order}`;
+            if (myUserId) {
+                url += `&user_id=${myUserId}`;
+            }
+
+            const resp = await fetch(url);
             const data = await resp.json();
 
             if (!data.success) {
