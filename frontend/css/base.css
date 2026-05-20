@@ -328,3 +328,71 @@ span.flatpickr-weekday {
     color: var(--niko-yellow-500);
     font-weight: 700;
 }
+
+/* ==========================================
+   ESTILOS PARA ELIMINAR COMENTARIOS
+   ========================================== */
+.comment-delete-btn {
+    background: transparent;
+    border: none;
+    color: #dc2626;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 14px;
+    transition: all 0.2s;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+.comment-delete-btn:hover {
+    opacity: 1;
+    background: rgba(220, 38, 38, 0.1);
+}
+
+.comment-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    flex-shrink: 0;
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-header {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.comment-name {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.comment-handle {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.comment-time {
+    color: #9ca3af;
+    font-size: 11px;
+}
+
