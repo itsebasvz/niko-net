@@ -286,36 +286,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ---- RQF14: Cargar comentarios de un post ----
-    async function cargarComentarios(postId, container) {
-        try {
-            const resp = await fetch(`http://localhost:4000/posts/${postId}/comments`);
-            const data = await resp.json();
+async function cargarComentarios(postId, container) {
+    try {
+        const resp = await fetch(`http://localhost:4000/posts/${postId}/comments`);
+        const data = await resp.json();
 
-            if (data.success && data.comments.length > 0) {
-                container.innerHTML = data.comments.map(c => {
-                    const letra = (c.display_name || 'U').charAt(0).toUpperCase();
-                    return `
-                        <div class="comment">
-                            <div class="comment-avatar" style="background:${getAvatarBg(c.author_id)}">${letra}</div>
-                            <div class="comment-body">
-                                <div class="comment-head">
-                                    <span class="comment-name">${escapeHtml(c.display_name)}</span>
-                                    <span class="comment-handle">@${escapeHtml(c.username)}</span>
-                                    <span class="comment-ts">${tiempoRelativo(c.created_at)}</span>
-                                </div>
-                                <div class="comment-text">${escapeHtml(c.content)}</div>
+        if (data.success && data.comments.length > 0) {
+            const currentUserId = localStorage.getItem('nikonet_userId');
+            
+            container.innerHTML = data.comments.map(c => {
+                const letra = (c.display_name || 'U').charAt(0).toUpperCase();
+                const esMiComentario = currentUserId && parseInt(currentUserId) === c.author_id;
+                
+                return `
+                    <div class="comment">
+                        <div class="comment-avatar" style="background:${getAvatarBg(c.author_id)}">${letra}</div>
+                        <div class="comment-body">
+                            <div class="comment-head">
+                                <span class="comment-name">${escapeHtml(c.display_name)}</span>
+                                <span class="comment-handle">@${escapeHtml(c.username)}</span>
+                                <span class="comment-ts">${tiempoRelativo(c.created_at)}</span>
                             </div>
+                            <div class="comment-text">${escapeHtml(c.content)}</div>
                         </div>
-                    `;
-                }).join('');
-            } else {
-                container.innerHTML = '<div class="comments-empty">Sé el primero en comentar ✨</div>';
-            }
-        } catch (err) {
-            console.error('Error al cargar comentarios:', err);
-            container.innerHTML = '<div class="comments-empty">Error al cargar comentarios</div>';
+                        ${esMiComentario ? `
+                            <button class="comment-delete-btn" onclick="eliminarComentario(${c.id}, ${c.author_id}, ${postId})">
+                                🗑️
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        } else {
+            container.innerHTML = '<div class="comments-empty">Sé el primero en comentar ✨</div>';
         }
+    } catch (err) {
+        console.error('Error al cargar comentarios:', err);
+        container.innerHTML = '<div class="comments-empty">Error al cargar comentarios</div>';
     }
+}
 
     // ---- RQF14: Actualizar el contador de comentarios en el post del feed ----
     function actualizarContadorComentarios(postId) {
@@ -831,6 +840,8 @@ async function eliminarComentario(commentId, authorId, postId) {
         mostrarToast('❌ Error al eliminar comentario', true);
     }
 }
+
+window.eliminarComentario = eliminarComentario;
 
 async function actualizarContadorComentarios(postId) {
     try {
