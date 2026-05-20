@@ -793,4 +793,58 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error al buscar usuarios:', err);
         }
     }
+    // ===========================================================
+// ELIMINAR COMENTARIO
+// ===========================================================
+async function eliminarComentario(commentId, authorId, postId) {
+    const currentUserId = localStorage.getItem('nikonet_userId');
+    
+    if (parseInt(currentUserId) !== authorId) {
+        mostrarToast('❌ Solo puedes eliminar tus propios comentarios', true);
+        return;
+    }
+    
+    const confirmar = confirm('¿Eliminar este comentario?');
+    if (!confirmar) return;
+    
+    try {
+        const response = await fetch(`http://localhost:4000/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: currentUserId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarToast('✅ Comentario eliminado');
+            const commentsList = document.getElementById('commentsList');
+            if (commentsList) {
+                cargarComentarios(postId, commentsList);
+            }
+            actualizarContadorComentarios(postId);
+        } else {
+            mostrarToast('❌ Error: ' + data.message, true);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarToast('❌ Error al eliminar comentario', true);
+    }
+}
+
+async function actualizarContadorComentarios(postId) {
+    try {
+        const response = await fetch(`http://localhost:4000/posts/${postId}/comments`);
+        const data = await response.json();
+        if (data.success) {
+            const contador = data.comments.length;
+            const btnComment = document.querySelector(`.btn-comment-action[data-post-id="${postId}"]`);
+            if (btnComment) {
+                btnComment.querySelector('span').textContent = contador;
+            }
+        }
+    } catch (error) {
+        console.error('Error al actualizar contador:', error);
+    }
+}
 });
