@@ -172,6 +172,64 @@ app.get('/posts', async (req, res) => {
     }
 });
 
+// ==========================================
+// ELIMINAR COMENTARIO (Soft Delete)
+// ==========================================
+app.delete('/comments/:id', async (req, res) => {
+  const commentId = req.params.id;
+  const { user_id } = req.body;
+
+  if (!user_id) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Se requiere autenticación' 
+    });
+  }
+
+  try {
+    // Verificar que el comentario existe y quién es el autor
+    const commentQuery = await pool.query(
+      'SELECT author_id FROM comments WHERE id = $1 AND is_deleted = FALSE',
+      [commentId]
+    );
+
+    if (commentQuery.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Comentario no encontrado o ya fue eliminado' 
+      });
+    }
+
+    const comment = commentQuery.rows[0];
+
+    // Verificar que el usuario es el autor
+    if (comment.author_id !== parseInt(user_id)) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'No tienes permiso para eliminar este comentario' 
+      });
+    }
+
+    // Soft delete
+    await pool.query(
+      'UPDATE comments SET is_deleted = TRUE WHERE id = $1',
+      [commentId]
+    );
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Comentario eliminado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error al eliminar comentario:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al eliminar el comentario' 
+    });
+  }
+});
+
 // Eliminar post (soft delete)
 app.delete('/posts/:id', async (req, res) => {
   const postId = req.params.id;
