@@ -156,6 +156,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="like-count">${post.like_count || 0}</span>
                     </button>
                     ${esMiPost ? `
+                        <button class="act btn-editar-post" 
+                                data-post-id="${post.id}" 
+                                data-raw-content="${escapeHtml(post.content)}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            <span>Editar</span>
+                        </button>
                         <button class="act btn-eliminar-post" data-post-id="${post.id}" data-author-id="${post.author_id}">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="3 6 5 6 21 6"/>
@@ -179,10 +188,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Click en el resto del post abre el modal (excepto links de perfil y botones)
+        // Click en el resto del post abre el modal (excepto links de perfil y botones), también ignora 
+        // los click si ocurren dentro del nuevo formulario de edición
         article.addEventListener('click', (e) => {
             if (e.target.closest('.act')) return;
             if (e.target.closest('.post-profile-link')) return;
+            if (e.target.closest('.inline-edit-form')) return; 
             abrirModal(post);
         });
 
@@ -719,6 +730,96 @@ async function cargarComentarios(postId, container) {
         } finally {
             btnPostear.disabled = false;
         }
+    });
+
+    // ---- INICIAR MODO EDICIÓN EN LÍNEA ----
+    document.addEventListener('click', (e) => {
+        const btnEditar = e.target.closest('.btn-editar-post');
+        if (!btnEditar) return;
+        
+        e.stopPropagation();
+        
+        // 1. Identificar el post y sus elementos
+        const article = btnEditar.closest('.post');
+        const postBody = article.querySelector('.post-body');
+        const rawContent = btnEditar.getAttribute('data-raw-content');
+        const postId = btnEditar.dataset.postId;
+
+        // 2. Evitar abrir múltiples editores en el mismo post
+        if (article.querySelector('.inline-edit-form')) return;
+
+        // 3. Ocultar el texto original (no lo borramos por si el usuario cancela)
+        postBody.style.display = 'none';
+
+        // 4. Crear el formulario de edición en línea
+        const editForm = document.createElement('div');
+        editForm.className = 'inline-edit-form';
+        editForm.style.marginTop = '10px';
+        editForm.innerHTML = `
+            <textarea class="edit-textarea" rows="3" maxlength="280" style="width: 100%; resize: vertical; border-radius: 8px; padding: 8px; border: 1px solid var(--border-strong); background: var(--bg-surface-2); color: var(--fg-1); font-family: inherit; margin-bottom: 8px;">${rawContent}</textarea>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn-secondary btn-pill btn-cancel-edit" style="padding: 4px 12px; font-size: 0.8em;">Cancelar</button>
+                <button class="btn-primary btn-pill btn-save-edit" data-post-id="${postId}" style="padding: 4px 12px; font-size: 0.8em;">Guardar</button>
+            </div>
+        `;
+
+        // 5. Insertar el formulario justo después del texto original
+        postBody.parentNode.insertBefore(editForm, postBody.nextSibling);
+
+        // 6. Botón de Cancelar: Elimina el formulario y regresa el texto original
+        editForm.querySelector('.btn-cancel-edit').addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            editForm.remove();
+            postBody.style.display = 'block';
+        });
+
+        // 7. Enfocar el textarea automáticamente y poner el cursor al final
+        const textarea = editForm.querySelector('.edit-textarea');
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+
+        // 8. Botón de Guardar: Enviar al backend
+        editForm.querySelector('.btn-save-edit').addEventListener('click', async (ev) => {
+            ev.stopPropagation(); // Detener el burbujeo
+            const btnSave = ev.target;
+            const newContent = textarea.value.trim();
+            const currentUserId = localStorage.getItem('nikonet_userId');
+            
+            // Validaciones rápidas
+            if (!newContent) return; 
+            if (newContent === rawContent) {
+                editForm.querySelector('.btn-cancel-edit').click(); // Si no cambió nada, solo cierra
+                return;
+            }
+
+            btnSave.disabled = true;
+            btnSave.textContent = '...';
+
+            try {
+                const response = await fetch(`http://localhost:4000/posts/${postId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: currentUserId, content: newContent })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Recargar los posts para que aplique tu lógica de truncado (los 140 caracteres)
+                    cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
+                    mostrarToast('✅ ¡Publicación actualizada!');
+                } else {
+                    mostrarToast('❌ Error: ' + data.message, true);
+                    btnSave.disabled = false;
+                    btnSave.textContent = 'Guardar';
+                }
+            } catch (error) {
+                console.error('Error al editar:', error);
+                mostrarToast('❌ Error de red', true);
+                btnSave.disabled = false;
+                btnSave.textContent = 'Guardar';
+            }
+        });
     });
 
     // ---- TOAST ----
