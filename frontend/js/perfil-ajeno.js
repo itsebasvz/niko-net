@@ -384,6 +384,75 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ===========================================================
+    // RQF22: MODAL DE SEGUIDORES Y SIGUIENDO
+    // ===========================================================
+    const followersModal = document.getElementById("followersModal");
+    const followersModalClose = document.getElementById("followersModalClose");
+    const followersModalBody = document.getElementById("followersModalBody");
+    const btnVerSeguidores = document.getElementById("btn-ver-seguidores");
+    const btnVerSiguiendo = document.getElementById("btn-ver-siguiendo");
+
+    async function abrirModalLista(tipo) {
+        const isSeguidores = tipo === 'seguidores';
+        const titulo = isSeguidores ? 'Seguidores' : 'Siguiendo';
+        const endpoint = isSeguidores ? 'followers-list' : 'following-list-by-username';
+        const arrayName = isSeguidores ? 'followers' : 'following';
+        const emptyMsg = isSeguidores ? 'Este usuario aún no tiene seguidores.' : 'Este usuario aún no sigue a nadie.';
+
+        document.querySelector('#followersModal .modal-title').textContent = titulo;
+        followersModalBody.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--fg-2);">Cargando...</div>';
+        followersModal.style.display = 'grid';
+        document.body.style.overflow = 'hidden';
+
+        try {
+            const resp = await fetch(`http://localhost:4000/users/${targetUsername}/${endpoint}`);
+            const data = await resp.json();
+
+            if (!data.success) {
+                followersModalBody.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--fg-2);">Error al cargar ${titulo.toLowerCase()}.</div>`;
+                return;
+            }
+
+            const lista = data[arrayName];
+            if (!lista || lista.length === 0) {
+                followersModalBody.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--fg-2);">${emptyMsg}</div>`;
+                return;
+            }
+
+            followersModalBody.innerHTML = lista.map(u => {
+                const letra = (u.display_name || u.username).charAt(0).toUpperCase();
+                const bg = getAvatarBg(u.id);
+                return `
+                    <a href="perfil-ajeno.html?username=${encodeURIComponent(u.username)}" class="search-result-item" style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle);">
+                        <div class="search-result-avatar" style="background:${bg}">${letra}</div>
+                        <div class="search-result-info">
+                            <span class="search-result-name">${escapeHtml(u.display_name || u.username)}</span>
+                            <span class="search-result-handle">@${escapeHtml(u.username)}</span>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error(`Error al cargar ${titulo}:`, err);
+            followersModalBody.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--fg-2);">Error de conexión.</div>';
+        }
+    }
+
+    if (followersModal) {
+        if (btnVerSeguidores) btnVerSeguidores.addEventListener("click", () => abrirModalLista('seguidores'));
+        if (btnVerSiguiendo) btnVerSiguiendo.addEventListener("click", () => abrirModalLista('siguiendo'));
+
+        function cerrarFollowersModal() {
+            followersModal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        followersModalClose.addEventListener('click', cerrarFollowersModal);
+        followersModal.addEventListener('click', (e) => { if (e.target === followersModal) cerrarFollowersModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && followersModal.style.display === 'grid') cerrarFollowersModal(); });
+    }
+
+    // ===========================================================
     // INICIALIZAR
     // ===========================================================
     cargarPerfil();

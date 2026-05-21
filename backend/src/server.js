@@ -568,6 +568,31 @@ app.post('/users/:username/follow', async (req, res) => {
   }
 });
 
+// Obtener la lista detallada de usuarios a los que sigue un usuario por nombre de usuario
+app.get('/users/:username/following-list-by-username', async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.username, u.display_name
+       FROM users u
+       JOIN follows f ON f.following_id = u.id
+       JOIN users origin ON origin.id = f.follower_id
+       WHERE origin.username = $1
+       ORDER BY u.display_name ASC`,
+      [username]
+    );
+
+    res.status(200).json({
+      success: true,
+      following: result.rows
+    });
+  } catch (error) {
+    console.error('Error al obtener la lista de seguidos:', error);
+    res.status(500).json({ success: false, message: 'Error interno al cargar cuentas seguidas' });
+  }
+});
+
 // Obtener la lista detallada de usuarios a los que sigue un usuario (RQF16 v2)
 app.get('/users/:user_id/following-list', async (req, res) => {
   const { user_id } = req.params;
@@ -589,6 +614,31 @@ app.get('/users/:user_id/following-list', async (req, res) => {
   } catch (error) {
     console.error('Error al obtener la lista de seguidos:', error);
     res.status(500).json({ success: false, message: 'Error interno al cargar cuentas seguidas' });
+  }
+});
+
+// Obtener la lista detallada de usuarios que siguen a un usuario (RQF22)
+app.get('/users/:username/followers-list', async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.username, u.display_name
+       FROM users u
+       JOIN follows f ON f.follower_id = u.id
+       JOIN users target ON target.id = f.following_id
+       WHERE target.username = $1
+       ORDER BY u.display_name ASC`,
+      [username]
+    );
+
+    res.status(200).json({
+      success: true,
+      followers: result.rows
+    });
+  } catch (error) {
+    console.error('Error al obtener la lista de seguidores:', error);
+    res.status(500).json({ success: false, message: 'Error interno al cargar seguidores' });
   }
 });
 

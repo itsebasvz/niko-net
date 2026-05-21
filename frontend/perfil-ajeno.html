@@ -64,8 +64,8 @@
                 <p id="lbl-bio" style="margin-bottom: 20px; color: var(--fg-2); line-height: 1.5;">Cargando biografía...</p>
                 
                 <div style="display: flex; gap: 16px; margin-bottom: 20px; font-family: var(--font-mono); font-size: 13px; color: var(--fg-3);">
-                    <div><span style="color: var(--fg-1); font-weight: 700; font-family: var(--font-body);" id="lbl-siguiendo">0</span> Siguiendo</div>
-                    <div><span style="color: var(--fg-1); font-weight: 700; font-family: var(--font-body);" id="lbl-seguidores">0</span> Seguidores</div>
+                    <div style="cursor: pointer; transition: color 0.2s;" id="btn-ver-siguiendo" onmouseover="this.style.color='var(--fg-1)'" onmouseout="this.style.color='var(--fg-3)'"><span style="color: var(--fg-1); font-weight: 700; font-family: var(--font-body);" id="lbl-siguiendo">0</span> Siguiendo</div>
+                    <div style="cursor: pointer; transition: color 0.2s;" id="btn-ver-seguidores" onmouseover="this.style.color='var(--fg-1)'" onmouseout="this.style.color='var(--fg-3)'"><span style="color: var(--fg-1); font-weight: 700; font-family: var(--font-body);" id="lbl-seguidores">0</span> Seguidores</div>
                 </div>
                 
                 <div>
@@ -127,6 +127,19 @@
             <span class="modal-title">Post</span>
         </header>
         <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<!-- Modal overlay para ver lista de seguidores (RQF22) -->
+<div class="modal-overlay" id="followersModal" style="display:none; z-index: 1000;">
+    <div class="modal-card" id="followersModalCard" style="max-height: 80vh; display: flex; flex-direction: column; max-width: 400px; width: 100%;">
+        <header class="modal-head" style="flex-shrink: 0; padding: 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+            <span class="modal-title" style="font-weight: 700; color: var(--fg-1);">Seguidores</span>
+            <button class="modal-close" id="followersModalClose" style="background: none; border: none; color: var(--fg-2); font-size: 24px; cursor: pointer; padding: 0;">×</button>
+        </header>
+        <div class="modal-body" id="followersModalBody" style="overflow-y: auto; padding: 0;">
+            <!-- La lista se inyecta aquí -->
+        </div>
     </div>
 </div>
 

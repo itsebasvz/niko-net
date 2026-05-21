@@ -60,6 +60,11 @@
                 </div>
                 <p id="lbl-bio" style="margin-bottom: 20px; color: var(--fg-2); line-height: 1.5;">Cargando biografía...</p>
                 
+                <div style="display: flex; gap: 16px; margin-bottom: 20px; font-family: var(--font-mono); font-size: 13px; color: var(--fg-3);">
+                    <div style="cursor: pointer; transition: color 0.2s;" id="btn-ver-siguiendo" onmouseover="this.style.color='var(--fg-1)'" onmouseout="this.style.color='var(--fg-3)'"><span style="color: var(--fg-1); font-weight: 700; font-family: var(--font-body);" id="lbl-siguiendo">0</span> Siguiendo</div>
+                    <div style="cursor: pointer; transition: color 0.2s;" id="btn-ver-seguidores" onmouseover="this.style.color='var(--fg-1)'" onmouseout="this.style.color='var(--fg-3)'"><span style="color: var(--fg-1); font-weight: 700; font-family: var(--font-body);" id="lbl-seguidores">0</span> Seguidores</div>
+                </div>
+                
                 <div>
                     <button class="btn-secondary btn-pill" id="btn-activar-edicion">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; vertical-align: middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -96,6 +101,24 @@
                 </form>
             </div>
         </div>
+        <div class="feed-divider" style="margin-top: 32px;"><span>Mis Posts</span></div>
+
+        <!-- Filtro de ordenamiento -->
+        <div class="feed-filter" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 0 16px 16px 16px;">
+            <div class="custom-dropdown" id="feedOrderDropdown" data-value="desc">
+                <button class="btn-secondary btn-pill cd-toggle" id="cdToggleBtn" style="padding: 5px 12px; font-size: 0.85em; cursor: pointer; outline: none; height: 32px; display: flex; align-items: center; gap: 8px;">
+                    <span id="cdSelectedText">Más recientes primero</span>
+                    <span style="font-size: 0.8em;">▼</span>
+                </button>
+                <div class="cd-menu" id="cdMenu">
+                    <div class="cd-option active" data-value="desc">Más recientes primero</div>
+                    <div class="cd-option" data-value="asc">Más antiguos primero</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Posts se inyectan aquí -->
+        <div class="post-list" id="muro-posts"></div>
     </main>
 
     <aside class="right-rail">
@@ -104,6 +127,30 @@
             <p class="trend-meta" style="line-height: 1.4;">Estás en el modo de edición. Asegúrate de guardar tus cambios antes de salir de esta página.</p>
         </section>
     </aside>
+</div>
+
+<!-- Modal overlay para ver lista de seguidores (RQF22) -->
+<div class="modal-overlay" id="followersModal" style="display:none; z-index: 1000;">
+    <div class="modal-card" id="followersModalCard" style="max-height: 80vh; display: flex; flex-direction: column; max-width: 400px; width: 100%;">
+        <header class="modal-head" style="flex-shrink: 0; padding: 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+            <span class="modal-title" style="font-weight: 700; color: var(--fg-1);">Seguidores</span>
+            <button class="modal-close" id="followersModalClose" style="background: none; border: none; color: var(--fg-2); font-size: 24px; cursor: pointer; padding: 0;">×</button>
+        </header>
+        <div class="modal-body" id="followersModalBody" style="overflow-y: auto; padding: 0;">
+            <!-- La lista se inyecta aquí -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal overlay para ver post publicado -->
+<div class="modal-overlay" id="postModal" style="display:none;">
+    <div class="modal-card" id="modalCard">
+        <header class="modal-head">
+            <button class="modal-close" id="modalClose">×</button>
+            <span class="modal-title">Post</span>
+        </header>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
 </div>
 
 <script src="js/perfil.js"></script>
