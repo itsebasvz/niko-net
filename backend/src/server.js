@@ -340,6 +340,22 @@ app.post('/posts/like', async (req, res) => {
   }
 
   try {
+    const postResult = await pool.query(
+      'SELECT author_id FROM posts WHERE id = $1 AND is_deleted = FALSE',
+      [post_id]
+    );
+
+    if (postResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Post no encontrado' });
+    }
+
+    const authorId = postResult.rows[0].author_id;
+    const actorResult = await pool.query(
+      'SELECT username, display_name FROM users WHERE id = $1',
+      [user_id]
+    );
+    const actor = actorResult.rows[0] || { username: 'usuario', display_name: 'Usuario' };
+
     // 1. Verificar si el usuario ya le dio like a este post
     const result = await pool.query(
       'SELECT * FROM likes WHERE post_id = $1 AND user_id = $2', 
@@ -371,6 +387,14 @@ app.post('/posts/like', async (req, res) => {
         [post_id]
       );
 
+      if (authorId !== parseInt(user_id)) {
+        await pool.query(
+          `INSERT INTO notifications (user_id, type, actor_username, actor_display_name, post_id, message)
+           VALUES ($1, 'like', $2, $3, $4, $5)`,
+          [authorId, actor.username, actor.display_name, post_id, `${actor.display_name} le gustó tu publicación`]
+        );
+      }
+
       return res.status(200).json({ success: true, action: 'liked' });
     }
   } catch (error) {
@@ -401,13 +425,20 @@ app.post('/posts/:id/comments', async (req, res) => {
   try {
     // Verificar que el post existe y no está eliminado
     const postCheck = await pool.query(
-      'SELECT id FROM posts WHERE id = $1 AND is_deleted = FALSE',
+      'SELECT author_id FROM posts WHERE id = $1 AND is_deleted = FALSE',
       [postId]
     );
 
     if (postCheck.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Publicación no encontrada' });
     }
+
+    const postAuthorId = postCheck.rows[0].author_id;
+    const actorResult = await pool.query(
+      'SELECT username, display_name FROM users WHERE id = $1',
+      [author_id]
+    );
+    const actor = actorResult.rows[0] || { username: 'usuario', display_name: 'Usuario' };
 
     // Insertar el comentario
     const result = await pool.query(
@@ -416,6 +447,14 @@ app.post('/posts/:id/comments', async (req, res) => {
        RETURNING *`,
       [postId, author_id, content.trim()]
     );
+
+    if (postAuthorId !== parseInt(author_id)) {
+      await pool.query(
+        `INSERT INTO notifications (user_id, type, actor_username, actor_display_name, post_id, message)
+         VALUES ($1, 'comment', $2, $3, $4, $5)`,
+        [postAuthorId, actor.username, actor.display_name, postId, `${actor.display_name} comentó en tu publicación`]
+      );
+    }
 
     res.status(201).json({
       success: true,
@@ -601,6 +640,19 @@ app.post('/users/:username/follow', async (req, res) => {
         'INSERT INTO follows (follower_id, following_id) VALUES ($1, $2)',
         [follower_id, targetId]
       );
+
+      const actorResult = await pool.query(
+        'SELECT username, display_name FROM users WHERE id = $1',
+        [follower_id]
+      );
+      const actor = actorResult.rows[0] || { username: 'usuario', display_name: 'Usuario' };
+
+      await pool.query(
+        `INSERT INTO notifications (user_id, type, actor_username, actor_display_name, post_id, message)
+         VALUES ($1, 'follow', $2, $3, NULL, $4)`,
+        [targetId, actor.username, actor.display_name, `${actor.display_name} empezó a seguirte`]
+      );
+
       res.status(200).json({ success: true, action: 'followed', message: '¡Ahora sigues a este usuario!' });
     }
   } catch (error) {
