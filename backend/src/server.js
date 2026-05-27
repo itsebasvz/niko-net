@@ -725,6 +725,53 @@ app.get('/users/search', async (req, res) => {
 });
 
 // ==========================================
+// NOTIFICACIONES
+// ==========================================
+
+app.get('/notifications', async (req, res) => {
+  const userId = req.query.user_id;
+
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'Se requiere user_id' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT id, type, actor_username, actor_display_name, post_id, message, is_read, created_at
+       FROM notifications
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    res.status(200).json({ success: true, notifications: result.rows });
+  } catch (error) {
+    console.error('Error al obtener notificaciones:', error);
+    res.status(500).json({ success: false, message: 'Error al cargar notificaciones' });
+  }
+});
+
+app.put('/notifications/read', async (req, res) => {
+  const userId = req.query.user_id;
+
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'Se requiere user_id' });
+  }
+
+  try {
+    await pool.query(
+      'UPDATE notifications SET is_read = TRUE WHERE user_id = $1 AND is_read = FALSE',
+      [userId]
+    );
+
+    res.status(200).json({ success: true, message: 'Notificaciones marcadas como leídas' });
+  } catch (error) {
+    console.error('Error al marcar notificaciones leídas:', error);
+    res.status(500).json({ success: false, message: 'Error al actualizar notificaciones' });
+  }
+});
+
+// ==========================================
 // INICIAR SERVIDOR
 // ==========================================
 const PORT = process.env.PORT || 4000;
