@@ -29,16 +29,15 @@ COMMENT ON TABLE users IS 'Cuentas de usuario';
 -- POSTS: Publicaciones de texto (máx. 280 caracteres)
 CREATE TABLE posts (
     id SERIAL PRIMARY KEY,
-    -- ON DELETE CASCADE: si se elimina el usuario, sus posts se eliminan automáticamente de la base de datos
     author_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content VARCHAR(280) NOT NULL,
-    -- Soft delete: marcamos el registro como eliminado en lugar de borrarlo físicamente.
-    -- Esto evita que likes y comentarios queden huérfanos en la base de datos.
+    -- ¡AQUÍ ESTÁN LAS DOS COLUMNAS NUEVAS! 👇
+    file_url VARCHAR(255),
+    file_name VARCHAR(255),
+    like_count INT DEFAULT 0,
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
-    like_count INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    image_url VARCHAR(255)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 COMMENT ON TABLE posts IS 'Publicaciones de texto (máx. 280 caracteres)';
 
