@@ -56,6 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const fufSelectedText = document.getElementById('fufSelectedText');
     let currentSpecificAuthorId = '';
 
+    const btnNotifications = document.getElementById('btnNotifications');
+    const notificationsBadge = document.getElementById('notificationsBadge');
+    const notificationsPanel = document.getElementById('notificationsPanel');
+    const notificationsList = document.getElementById('notificationsList');
+    let notificationsOpen = false;
+
     // Cargar info del usuario en el nav rail
     const displayName = localStorage.getItem('nikonet_displayName') || 'Usuario';
     const username = localStorage.getItem('nikonet_username') || 'usuario';
@@ -93,6 +99,86 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- FUNCIÓN: Obtener gradiente de avatar ----
     function getAvatarBg(id) {
         return AVATAR_GRADIENTS[(id || 0) % AVATAR_GRADIENTS.length];
+    }
+
+    // ---- FUNCIÓN: Cargar notificaciones y actualizar el badge ----
+    async function cargarNotificaciones() {
+        const currentUserId = localStorage.getItem('nikonet_userId');
+        if (!currentUserId || !notificationsBadge || !notificationsList) return;
+
+        try {
+            const response = await fetch(`http://localhost:4000/notifications?user_id=${currentUserId}`);
+            const data = await response.json();
+            if (!data.success) return;
+
+            const unreadCount = data.notifications.filter(n => !n.is_read).length;
+            if (unreadCount > 0) {
+                notificationsBadge.textContent = unreadCount;
+                notificationsBadge.style.display = 'inline-flex';
+            } else {
+                notificationsBadge.style.display = 'none';
+            }
+
+            notificationsList.innerHTML = data.notifications.length > 0
+                ? data.notifications.map(renderNotificationItem).join('')
+                : '<div class="notification-empty">No hay notificaciones</div>';
+        } catch (error) {
+            console.error('Error al cargar notificaciones:', error);
+            if (notificationsList) {
+                notificationsList.innerHTML = '<div class="notification-empty">No se pudieron cargar las notificaciones</div>';
+            }
+        }
+    }
+
+    async function marcarNotificacionesLeidas() {
+        const currentUserId = localStorage.getItem('nikonet_userId');
+        if (!currentUserId) return;
+
+        try {
+            await fetch(`http://localhost:4000/notifications/read?user_id=${currentUserId}`, {
+                method: 'PUT'
+            });
+            if (notificationsBadge) {
+                notificationsBadge.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error al marcar notificaciones leídas:', error);
+        }
+    }
+
+    function renderNotificationItem(notification) {
+        const icon = notification.type === 'like'
+            ? '❤️'
+            : notification.type === 'comment'
+                ? '💬'
+                : '👤';
+
+        return `
+            <div class="notification-item">
+                <div class="notification-icon">${icon}</div>
+                <div class="notification-body">
+                    <div class="notification-text">${escapeHtml(notification.message)}</div>
+                    <div class="notification-timestamp">${escapeHtml(tiempoRelativo(notification.created_at))}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function abrirPanelNotificaciones() {
+        if (!notificationsPanel) return;
+        notificationsOpen = !notificationsOpen;
+        notificationsPanel.style.display = notificationsOpen ? 'flex' : 'none';
+
+        if (notificationsOpen) {
+            marcarNotificacionesLeidas();
+            cargarNotificaciones();
+        }
+    }
+
+    function cerrarPanelNotificaciones() {
+        if (!notificationsPanel) return;
+        notificationsOpen = false;
+        notificationsPanel.style.display = 'none';
     }
 
     // ---- FUNCIÓN: Escapar HTML para evitar XSS ----
@@ -420,10 +506,24 @@ async function cargarComentarios(postId, container) {
         formCrearPost.requestSubmit();
     });
 
+    if (btnNotifications) {
+        btnNotifications.addEventListener('click', (e) => {
+            e.stopPropagation();
+            abrirPanelNotificaciones();
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.notifications-panel') && !e.target.closest('#btnNotifications')) {
+            cerrarPanelNotificaciones();
+        }
+    });
+
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (previewModal.style.display === 'grid') cerrarPreview();
             else if (postModal.style.display === 'grid') cerrarModal();
+            else if (notificationsOpen) cerrarPanelNotificaciones();
         }
     });
 
@@ -642,6 +742,7 @@ async function cargarComentarios(postId, container) {
 
     // Cargar posts iniciales
     cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
+    cargarNotificaciones();
 
     // ---- LÓGICA DEL CUSTOM DROPDOWN ----
     if (cdToggleBtn) {

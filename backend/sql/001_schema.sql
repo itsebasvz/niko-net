@@ -79,6 +79,23 @@ CREATE TABLE likes (
 );
 COMMENT ON TABLE likes IS 'Likes a posts (un like por usuario por post)';
 
+-- NOTIFICATIONS: Notificaciones para usuarios
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(20) NOT NULL,
+    actor_username VARCHAR(50) NOT NULL,
+    actor_display_name VARCHAR(100) NOT NULL,
+    post_id INT REFERENCES posts(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+COMMENT ON TABLE notifications IS 'Notificaciones recibidas por el usuario';
+
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_created_at ON notifications(created_at);
+
 -- REFRESH_TOKENS: Tokens JWT de refresco
 CREATE TABLE refresh_tokens (
     id SERIAL PRIMARY KEY,
