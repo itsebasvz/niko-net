@@ -55,7 +55,7 @@ img { max-width: 100%; }
 }
 
 /* ============ NAV RAIL ============ */
-.nav-rail { position: sticky; top: 0; height: 100vh; padding: 18px 12px; display: flex; flex-direction: column; gap: 6px; border-right: 1px solid var(--border-subtle); position: relative; }
+.nav-rail { position: sticky; top: 0; height: 100vh; padding: 18px 12px; display: flex; flex-direction: column; gap: 6px; border-right: 1px solid var(--border-subtle); }
 .nav-logo { display: flex; align-items: center; gap: 10px; padding: 6px 12px 18px; }
 .nav-logo img { width: 36px; height: 36px; }
 .nav-logo span { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: var(--ls-tight); }
