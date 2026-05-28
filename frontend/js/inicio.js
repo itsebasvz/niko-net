@@ -202,6 +202,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentUserId = localStorage.getItem('nikonet_userId');
         const esMiPost = currentUserId && parseInt(currentUserId) === post.author_id;
 
+        // ---- PREPARAR ARCHIVO O IMAGEN ----
+        let htmlArchivo = '';
+        if (post.file_url) {
+            // Si termina en extensión de imagen, mostramos la imagen
+            if (post.file_name && post.file_name.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                htmlArchivo = `<img src="http://localhost:4000${post.file_url}" alt="Imagen adjunta" style="max-width: 100%; border-radius: 8px; margin-top: 10px; display: block;">`;
+            } else {
+                // Si es un PDF, ZIP, etc., mostramos botón de descarga
+                htmlArchivo = `
+                    <div style="margin-top: 10px; padding: 10px; border: 1px solid var(--border-strong); border-radius: 8px;">
+                        📎 <strong>${escapeHtml(post.file_name)}</strong>
+                        <br>
+                        <a href="http://localhost:4000${post.file_url}" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 5px; padding: 5px 10px; text-decoration: none;">Ver / Descargar</a>
+                    </div>
+                `;
+            }
+        }
+
         const article = document.createElement('article');
         article.className = 'post' + (isNew ? ' lit' : '');
 
@@ -222,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </header>
                 <div class="post-body">
                     ${escapeHtml(contenidoVisible)}${truncado ? '<span class="ver-mas">Ver más</span>' : ''}
+                    ${htmlArchivo} </div>
                 </div>
                 <footer class="post-actions">
                     <button class="act btn-comment-action" data-post-id="${post.id}">
@@ -796,42 +815,56 @@ async function cargarComentarios(postId, container) {
     }
 
     // ---- CREAR POST ----
-    formCrearPost.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const content = contenidoPost.value.trim();
-        const authorId = localStorage.getItem('nikonet_userId');
+    // ---- CREAR POST ----
+formCrearPost.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const content = contenidoPost.value.trim();
+    const authorId = localStorage.getItem('nikonet_userId');
 
-        if (!authorId) {
-            alert('Error de sesión: No se pudo identificar al autor. Inicia sesión de nuevo.');
-            return;
+    if (!authorId) {
+        alert('Error de sesión: No se pudo identificar al autor. Inicia sesión de nuevo.');
+        return;
+    }
+    if (!content) return;
+
+    // Asegúrate de que el ID en tu HTML sea 'fileInput'
+    const fileInput = document.getElementById('fileInput');
+
+    const formData = new FormData();
+    formData.append('author_id', authorId);
+    formData.append('content', content);
+    
+    // Si el usuario seleccionó un archivo, lo adjuntamos
+    if (fileInput && fileInput.files.length > 0) {
+        formData.append('archivo', fileInput.files[0]);
+    }
+
+    btnPostear.disabled = true;
+    
+    try {
+        const response = await fetch('http://localhost:4000/crear-post', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+
+        if (response.ok) {
+            formCrearPost.reset();
+            charCount.textContent = '280';
+            charCount.classList.remove('danger');
+            cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
+            mostrarToast('¡Publicación compartida con éxito!');
+        } else {
+            mostrarToast(data.message || 'Error al publicar', true);
         }
-        if (!content) return;
-
-        btnPostear.disabled = true;
-        try {
-            const response = await fetch('http://localhost:4000/crear-post', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ author_id: authorId, content: content })
-            });
-            const data = await response.json();
-
-            if (response.ok) {
-                formCrearPost.reset();
-                charCount.textContent = '280';
-                charCount.classList.remove('danger');
-                cargarPosts(currentOrderValue, feedDate ? feedDate.value : '');
-                mostrarToast('¡Post conjurado con éxito!');
-            } else {
-                mostrarToast(data.message || 'Error al publicar', true);
-            }
-        } catch (error) {
-            console.error('Error al publicar:', error);
-            mostrarToast('No se pudo conectar con el servidor', true);
-        } finally {
-            btnPostear.disabled = false;
-        }
-    });
+    } catch (error) {
+        console.error('Error al publicar:', error);
+        mostrarToast('No se pudo conectar con el servidor', true);
+    } finally {
+        btnPostear.disabled = false;
+    }
+});
 
     // ---- INICIAR MODO EDICIÓN EN LÍNEA ----
     document.addEventListener('click', (e) => {

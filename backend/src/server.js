@@ -4,6 +4,39 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// 1. Crear carpeta uploads si no existe
+const dir = './uploads';
+if (!fs.existsSync(dir)){
+    fs.mkdirSync(dir);
+}
+
+// 2. Configurar dónde y cómo se guardan las imágenes
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/') // Las imágenes se guardarán en la carpeta backend/uploads/
+  },
+  filename: function (req, file, cb) {
+    // Le damos un nombre único basado en la fecha para que no choquen si se llaman igual
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// 3. Filtro para aceptar solo imágenes
+// Filtro genérico (acepta cualquier archivo hasta 10MB)
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10 Megabytes
+});
+
+// 4. Hacer que la carpeta sea pública para el navegador
+const express = require('express'); // Asegúrate de tener acceso a express si no lo tenías en este archivo
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // ==========================================
 // CONEXIÓN DIRECTA A BD (para rutas que no están en app.js)
 // ==========================================
@@ -84,9 +117,14 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Crear post
-app.post('/crear-post', async (req, res) => {
+// Crear post (Ahora con soporte para imagen)
+// upload.single('image') busca un archivo adjunto que se llame 'image'
+app.post('/crear-post', upload.single('archivo'), async (req, res) => {
   const { author_id, content } = req.body;
+  
+  // Obtenemos la URL y el nombre original si se subió algo
+  const fileUrl = req.file ? `/uploads/${req.file.filename}` : null;
+  const fileName = req.file ? req.file.originalname : null;
 
   if (!content || content.trim() === '') {
     return res.status(400).json({ success: false, message: 'El contenido no puede estar vacío' });
@@ -94,13 +132,13 @@ app.post('/crear-post', async (req, res) => {
 
   try {
     const nuevoPost = await pool.query(
-      'INSERT INTO posts (author_id, content) VALUES ($1, $2) RETURNING *',
-      [author_id, content]
+      'INSERT INTO posts (author_id, content, file_url, file_name) VALUES ($1, $2, $3, $4) RETURNING *',
+      [author_id, content, fileUrl, fileName]
     );
 
     res.status(201).json({ 
       success: true, 
-      message: '¡Publicación compartida en Niko-net!',
+      message: '¡Publicación compartida con archivo en Niko-net!',
       post: nuevoPost.rows[0]
     });
   } catch (error) {
@@ -139,6 +177,8 @@ app.get('/posts', async (req, res) => {
                 p.author_id,
                 p.created_at, 
                 p.like_count, 
+                p.file_url,
+                p.file_name,
                 u.display_name, 
                 u.username,
                 (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = FALSE) AS comment_count,

@@ -37,7 +37,8 @@ CREATE TABLE posts (
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
     like_count INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    image_url VARCHAR(255)
 );
 COMMENT ON TABLE posts IS 'Publicaciones de texto (máx. 280 caracteres)';
 
@@ -117,6 +118,7 @@ CREATE INDEX idx_posts_author_id ON posts(author_id);
 CREATE INDEX idx_comments_post_id ON comments(post_id);
 CREATE INDEX idx_follows_follower ON follows(follower_id);
 CREATE INDEX idx_tokens_user_id ON refresh_tokens(user_id);
+
 -- NOTIFICACIONES: Tabla para guardar alertas de likes, comentarios y follows
 CREATE TABLE notifications (
     id SERIAL PRIMARY KEY,
