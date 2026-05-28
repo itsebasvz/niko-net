@@ -220,57 +220,73 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ---- Renderizar un post ----
     function renderPost(post) {
-        const avatarLetter = (post.display_name || 'U').charAt(0).toUpperCase();
-        const ts = tiempoRelativo(post.created_at);
-        const TRUNCAR_EN = 140;
-        const truncado = post.content.length > TRUNCAR_EN;
-        const contenidoVisible = truncado
-            ? post.content.substring(0, TRUNCAR_EN) + '…'
-            : post.content;
+    const avatarLetter = (post.display_name || 'U').charAt(0).toUpperCase();
+    const ts = tiempoRelativo(post.created_at);
+    const TRUNCAR_EN = 140;
+    const truncado = post.content.length > TRUNCAR_EN;
+    const contenidoVisible = truncado
+        ? post.content.substring(0, TRUNCAR_EN) + '…'
+        : post.content;
 
-        const article = document.createElement('article');
-        article.className = 'post';
-        article.innerHTML = `
-            <div class="post-avatar" style="background:${getAvatarBg(post.author_id)}">${avatarLetter}</div>
-            <div class="post-main">
-                <header class="post-head">
-                    <span class="post-name">${escapeHtml(post.display_name) || 'Usuario'}</span>
-                    <span class="post-handle">@${escapeHtml(post.username)}</span>
-                    <span class="post-ts">· ${ts}</span>
-                </header>
-                <div class="post-body">
-                    ${escapeHtml(contenidoVisible)}${truncado ? '<span class="ver-mas">Ver más</span>' : ''}
+    // ---- Generar HTML del archivo adjunto (imagen o enlace) ----
+    let htmlArchivo = '';
+    if (post.file_url) {
+        if (post.file_name && post.file_name.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+            htmlArchivo = `<img src="http://localhost:4000${post.file_url}" alt="Imagen adjunta" style="max-width: 100%; border-radius: 8px; margin-top: 10px; display: block;">`;
+        } else {
+            htmlArchivo = `
+                <div style="margin-top: 10px; padding: 10px; border: 1px solid var(--border-strong); border-radius: 8px;">
+                    📎 <strong>${escapeHtml(post.file_name)}</strong><br>
+                    <a href="http://localhost:4000${post.file_url}" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 5px; padding: 5px 10px; text-decoration: none;">Ver / Descargar</a>
                 </div>
-                <footer class="post-actions">
-                    <button class="act">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        <span>${post.comment_count || 0}</span>
-                    </button>
-                    <button class="act">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                        <span>0</span>
-                    </button>
-                    <button class="act btn-like-post" data-post-id="${post.id}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" 
-                             fill="${post.is_liked ? '#e07490' : 'none'}" 
-                             stroke="${post.is_liked ? '#e07490' : 'currentColor'}" 
-                             stroke-width="2" class="like-icon">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                        </svg>
-                        <span class="like-count">${post.like_count || 0}</span>
-                    </button>
-                </footer>
-            </div>
-        `;
-
-        // Click en post abre modal
-        article.addEventListener('click', (e) => {
-            if (e.target.closest('.act')) return;
-            abrirModal(post);
-        });
-
-        return article;
+            `;
+        }
     }
+
+    const article = document.createElement('article');
+    article.className = 'post';
+    article.innerHTML = `
+        <div class="post-avatar" style="background:${getAvatarBg(post.author_id)}">${avatarLetter}</div>
+        <div class="post-main">
+            <header class="post-head">
+                <span class="post-name">${escapeHtml(post.display_name) || 'Usuario'}</span>
+                <span class="post-handle">@${escapeHtml(post.username)}</span>
+                <span class="post-ts">· ${ts}</span>
+            </header>
+            <div class="post-body">
+                ${escapeHtml(contenidoVisible)}${truncado ? '<span class="ver-mas">Ver más</span>' : ''}
+                ${htmlArchivo}
+            </div>
+            <footer class="post-actions">
+                <button class="act">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <span>${post.comment_count || 0}</span>
+                </button>
+                <button class="act">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                    <span>0</span>
+                </button>
+                <button class="act btn-like-post" data-post-id="${post.id}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" 
+                         fill="${post.is_liked ? '#e07490' : 'none'}" 
+                         stroke="${post.is_liked ? '#e07490' : 'currentColor'}" 
+                         stroke-width="2" class="like-icon">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                    <span class="like-count">${post.like_count || 0}</span>
+                </button>
+            </footer>
+        </div>
+    `;
+
+    // Click en post abre modal
+    article.addEventListener('click', (e) => {
+        if (e.target.closest('.act')) return;
+        abrirModal(post);
+    });
+
+    return article;
+}
 
     // ===========================================================
     // DAR/QUITAR LIKE EN PERFIL AJENO

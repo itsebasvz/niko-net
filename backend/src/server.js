@@ -603,7 +603,8 @@ app.get('/users/:username/posts', async (req, res) => {
 
     const result = await pool.query(
       `SELECT p.id, p.content, p.author_id, p.created_at, p.like_count,
-              u.display_name, u.username,
+              u.display_name, p.file_url,
+              p.file_name, u.username,
               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = FALSE) AS comment_count,
               ${isLikedQuery} AS is_liked
        FROM posts p
@@ -612,7 +613,7 @@ app.get('/users/:username/posts', async (req, res) => {
        ORDER BY p.created_at ${order}`,
       values
     );
-
+    
     res.status(200).json({ success: true, posts: result.rows });
   } catch (error) {
     console.error('Error al obtener posts del usuario:', error);
