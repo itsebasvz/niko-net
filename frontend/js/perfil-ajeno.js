@@ -506,7 +506,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const letra = (u.display_name || u.username).charAt(0).toUpperCase();
                 const bg = getAvatarBg(u.id);
                 return `
-                    <a href="perfil-ajeno?username=${encodeURIComponent(u.username)}" class="search-result-item">
+                    <a href="perfil-ajeno.html?username=${encodeURIComponent(u.username)}">
                         <div class="search-result-avatar" style="background:${bg}">${letra}</div>
                         <div class="search-result-info">
                             <span class="search-result-name">${escapeHtml(u.display_name || u.username)}</span>
