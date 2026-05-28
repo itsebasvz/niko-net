@@ -117,3 +117,22 @@ CREATE INDEX idx_posts_author_id ON posts(author_id);
 CREATE INDEX idx_comments_post_id ON comments(post_id);
 CREATE INDEX idx_follows_follower ON follows(follower_id);
 CREATE INDEX idx_tokens_user_id ON refresh_tokens(user_id);
+-- NOTIFICACIONES: Tabla para guardar alertas de likes, comentarios y follows
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    -- A quién le pertenece la notificación
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    -- Tipo de notificación ('like', 'comment', 'follow')
+    type VARCHAR(50) NOT NULL,
+    -- Datos de la persona que hizo la acción
+    actor_username VARCHAR(100) NOT NULL,
+    actor_display_name VARCHAR(100) NOT NULL,
+    -- El post relacionado (puede ser NULL si es un 'follow')
+    post_id INT REFERENCES posts(id) ON DELETE CASCADE,
+    -- El mensaje a mostrar ("A Juan le gustó tu publicación")
+    message TEXT NOT NULL,
+    -- Saber si ya la vio o no
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+COMMENT ON TABLE notifications IS 'Tabla de notificaciones para los usuarios';

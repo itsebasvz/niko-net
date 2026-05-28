@@ -387,13 +387,23 @@ app.post('/posts/like', async (req, res) => {
         [post_id]
       );
 
+      // ... código anterior (INSERT INTO likes...)
+
+      // Enviar notificación solo si no es auto-like
       if (authorId !== parseInt(user_id)) {
-        await pool.query(
-          `INSERT INTO notifications (user_id, type, actor_username, actor_display_name, post_id, message)
-           VALUES ($1, 'like', $2, $3, $4, $5)`,
-          [authorId, actor.username, actor.display_name, post_id, `${actor.display_name} le gustó tu publicación`]
-        );
+        try {
+          await pool.query(
+            `INSERT INTO notifications (user_id, type, actor_username, actor_display_name, post_id, message)
+             VALUES ($1, 'like', $2, $3, $4, $5)`,
+            [authorId, actor.username, actor.display_name, post_id, `${actor.display_name} le gustó tu publicación`]
+          );
+        } catch (notifError) {
+          // Si la notificación falla, atrapamos el error pero NO detenemos el like
+          console.error('🚨 Error al crear la notificación de like:', notifError.message);
+        }
       }
+
+      return res.status(200).json({ success: true, action: 'liked' });
 
       return res.status(200).json({ success: true, action: 'liked' });
     }
